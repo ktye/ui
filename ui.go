@@ -2,20 +2,19 @@
 package ui
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
 	"io"
-	"log"
 
-	uidraw "github.com/ktye/ui/draw"
+	"github.com/ktye/ui/display"
 	"golang.org/x/exp/shiny/screen"
-	"golang.org/x/mobile/event/mouse"
 )
 
 // Window is the top ui element, created by New.
 type Window struct {
-	*uidraw.Display
+	*display.Display
 	Inputs chan Input
 	Error  chan error
 	Call   chan func()
@@ -30,15 +29,24 @@ type Window struct {
 
 	ScrollBGNormal, ScrollBGHover, ScrollVisibleNormal, ScrollVisibleHover color.Color
 
-	mouse, origMouse mouse.Event
+	mouse, origMouse Mouse
+	font             font
+	lastMouseWidget  Widget
+
+	keyboard KeyTranslator
 }
 
 // New returns a new window.
 func New(opt *screen.NewWindowOptions) *Window {
 	var w Window
-	w.Display = uidraw.New(opt)
+	w.Display = display.New(opt)
 	w.Inputs = make(chan Input)
 	w.Error = make(chan error)
+
+	// Wait for the window to be mapped. This creates the draw buffer and sets PixelsPerPt.
+	<-w.Display.Size
+
+	w.defaultFont()
 	w.defaultColors()
 
 	go func() {
@@ -46,9 +54,11 @@ func New(opt *screen.NewWindowOptions) *Window {
 			select {
 			case m := <-w.Display.Mouse:
 				w.Inputs <- Input{Type: InputMouse, Mouse: m}
-			case k := <-w.Key:
+			case k := <-w.Display.Key:
 				w.Inputs <- Input{Type: InputKey, Key: k}
-			case e := <-w.Err:
+			case s := <-w.Display.Size:
+				w.Inputs <- Input{Type: InputSize, Size: s}
+			case e := <-w.Display.Err:
 				if e == io.EOF {
 					close(w.Error)
 					return
@@ -89,15 +99,14 @@ func (d *Window) Draw() {
 		return
 	}
 	d.Lock()
-	defer d.Unlock()
-
 	dst := d.Display.Buffer.RGBA()
 	if d.Top.Draw == Dirty {
 		draw.Draw(dst, dst.Bounds(), d.Background, image.ZP, draw.Src)
 	}
 	d.Top.W.Draw(d, &d.Top, dst, image.ZP, d.mouse, d.Top.Draw == Dirty)
 	d.Top.Draw = Clean
-	// d.Display.Flush() ?
+	d.Unlock()
+	d.Display.Flush()
 }
 
 // Input propagates the input event through the UI tree.
@@ -105,51 +114,76 @@ func (d *Window) Draw() {
 // Resize is handled by reattaching does a layout and draw.
 // Func calls the function.
 // Error implies an error from shiny and terminates the program.
-func (d *Window) Input(e Input) {
-	logInputs := true
+func (w *Window) Input(e Input) {
+	logInputs := false
 
 	switch e.Type {
 	case InputMouse:
 		if logInputs {
-			log.Printf("ui: mouse %+v\n", e.Mouse)
+			fmt.Printf("ui: mouse %+v\n", e.Mouse)
 		}
-		d.Mouse(e.Mouse)
+		w.Mouse(e.Mouse)
 	case InputKey:
 		if logInputs {
-			log.Printf("duit: key %+v\n", e.Key)
+			fmt.Printf("duit: key %+v\n", e.Key)
 		}
-		//d.Key(e.Key)
-	case InputResize:
+		w.Key(e.Key)
+	case InputSize:
 		if logInputs {
-			log.Printf("duit: resize")
+			fmt.Printf("duit: size")
 		}
-		//d.Resize()
+		w.Resize()
 	case InputFunc:
 		if logInputs {
-			log.Printf("duit: func")
+			fmt.Printf("duit: func")
 		}
 		//e.Func()
-		//d.Render()
+		//w.Render()
 	case InputError:
 		if logInputs {
-			log.Printf("duit: error: %s", e.Error)
+			fmt.Printf("duit: error: %s", e.Error)
 		}
 	}
 }
 
-// Mouse delivers a mouse event to the UI tree.
-// Mouse is typically called by Input.
-func (d *Window) Mouse(m mouse.Event) {
-	/* TODO
-	if m.Buttons == 0 || d.origMouse.Buttons == 0 {
-		d.origMouse = m
-	}
-	*/
-	d.mouse = m
-	r := d.Top.W.Mouse(d, &d.Top, m, d.origMouse, image.ZP)
-	d.apply(r)
+func (w *Window) Resize() {
+	w.Top.Layout = Dirty
+	w.Top.Draw = Dirty
+	w.Render()
 }
 
-func (d *Window) apply(r Result) {
-	// TODO
+// MarkDraw is like MarkLayout, but marks ui as requiring a draw.
+func (w *Window) MarkDraw(widget Widget) {
+	if widget == nil {
+		w.Top.Draw = Dirty
+	} else {
+		if !w.Top.W.Mark(&w.Top, widget, false) {
+			fmt.Printf("duit: markdraw %T: nothing marked\n", widget)
+		}
+	}
+}
+
+func (w *Window) apply(r Result) {
+	if r.Warp != nil {
+		/* TODO mouse warp
+		if err := w.Display.MoveTo(*r.Warp); err != nil {
+			fmt.Printf("ui: warp to %v: %s\n", r.Warp, err)
+		} else {
+			d.mouse.Point = *r.Warp
+			d.mouse.Buttons = 0
+			d.origMouse = d.mouse
+			r = d.Top.UI.Mouse(d, &d.Top, d.mouse, d.origMouse, image.ZP)
+		}
+		*/
+	}
+	if r.Hit != w.lastMouseWidget {
+		if r.Hit != nil {
+			w.MarkDraw(r.Hit)
+		}
+		if w.lastMouseWidget != nil {
+			w.MarkDraw(w.lastMouseWidget)
+		}
+	}
+	w.lastMouseWidget = r.Hit
+	w.Render()
 }

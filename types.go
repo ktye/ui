@@ -6,6 +6,12 @@ import (
 
 	"golang.org/x/mobile/event/key"
 	"golang.org/x/mobile/event/mouse"
+	"golang.org/x/mobile/event/size"
+)
+
+const (
+	BorderSize    = 1
+	ScrollbarSize = 10
 )
 
 // State represents the layout/draw state of the widget of a Kid.
@@ -23,6 +29,7 @@ type Input struct {
 	Type  InputType
 	Mouse mouse.Event
 	Key   key.Event
+	Size  size.Event
 	Func  func()
 	Error error
 }
@@ -31,11 +38,11 @@ type Input struct {
 type InputType byte
 
 const (
-	InputMouse  InputType = iota // Mouse movement and/or button changes.
-	InputKey                     // Key typed.
-	InputFunc                    // Call the function.
-	InputResize                  // window was resized, reattach; does not have/need a field in Input.
-	InputError                   // An error occurred that may be recovered from.
+	InputMouse InputType = iota // Mouse movement and/or button changes.
+	InputKey                    // Key typed.
+	InputFunc                   // Call the function.
+	InputSize                   // window was resized, reattach; does not have/need a field in Input.
+	InputError                  // An error occurred that may be recovered from.
 )
 
 // Halign represents horizontal align of elements in a Grid.
@@ -73,7 +80,7 @@ type Result struct {
 // Colors represents the style in one state of the UI.
 type Colors struct {
 	Text       color.Color
-	Background color.Color
+	Background image.Image
 	Border     color.Color
 }
 

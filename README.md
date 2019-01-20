@@ -1,11 +1,12 @@
-# ui -- go gui toolkit
+# ui - go gui toolkit
 
 Ui should be a re-implementation of duit:
 
 - based on shiny
-- single screen applications
+- single screen application
 - mouse and key events forwarded from shiny
-- draw directly on screen.Buffer
+- draw directly on screen.Buffer with the standard draw.Image interface
+- scale size with shift+wheel
 
 ## Restrictions of duit
 

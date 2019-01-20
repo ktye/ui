@@ -1,5 +1,5 @@
-// Draw is the backend to ui.
-package draw
+// Display is the shiny backend of ui.
+package display
 
 import (
 	"image"
@@ -21,13 +21,15 @@ import (
 // Use New to create the display.
 type Display struct {
 	sync.Mutex
-	Mouse  chan mouse.Event
-	Key    chan key.Event
-	Err    chan error
-	Buffer screen.Buffer
-	screen screen.Screen
-	window screen.Window
-	opt    screen.NewWindowOptions
+	Mouse       chan mouse.Event
+	Key         chan key.Event
+	Size        chan size.Event
+	Err         chan error
+	PixelsPerPt float32
+	Buffer      screen.Buffer
+	screen      screen.Screen
+	window      screen.Window
+	opt         screen.NewWindowOptions
 }
 
 // New returns a new Display.
@@ -42,6 +44,7 @@ func New(opt *screen.NewWindowOptions) *Display {
 	d := &Display{
 		Mouse: make(chan mouse.Event),
 		Key:   make(chan key.Event),
+		Size:  make(chan size.Event),
 		Err:   make(chan error),
 		opt:   *opt,
 	}
@@ -67,6 +70,13 @@ func New(opt *screen.NewWindowOptions) *Display {
 	return d
 }
 
+func (d *Display) Flush() {
+	d.Lock()
+	d.window.Upload(image.Point{}, d.Buffer, d.Buffer.Bounds())
+	d.window.Publish()
+	d.Unlock()
+}
+
 func (d *Display) loop() {
 	w := d.window
 	b := d.Buffer
@@ -84,9 +94,10 @@ func (d *Display) loop() {
 			return
 		}
 		d.Buffer = b
+		d.PixelsPerPt = e.PixelsPerPt
 		d.Unlock()
+		d.Size <- e
 	}
-	resizeFunc(size.Event{WidthPx: d.opt.Width, HeightPx: d.opt.Height}) // initial call to allocat buffer.
 
 	// Delay and filter resize events.
 	resize := make(chan size.Event)
