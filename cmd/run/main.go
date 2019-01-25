@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"fmt"
 
+	"golang.org/x/exp/shiny/materialdesign/icons"
+
 	"github.com/eaburns/T/rope"
 	"github.com/ktye/iv/apl"
 	"github.com/ktye/iv/apl/numbers"
@@ -16,7 +18,11 @@ import (
 func main() {
 	var editor *ui.Edit
 
+	ui.RegisterIcon("DeviceGPSFixed", icons.DeviceGPSFixed)
+	ui.RegisterIcon("DeviceSignalWiFi1BarLock", icons.DeviceSignalWiFi1BarLock)
+
 	w := ui.New(nil)
+
 	w.SetKeyTranslator(ui.AplKeyboard{})
 	w.Top.W = ui.NewBox(
 		&ui.Button{
@@ -33,6 +39,15 @@ func main() {
 				edit(editor)
 				return
 			},
+		},
+		&ui.Button{
+			Icon:     "DeviceGPSFixed",
+			Colorset: &w.Primary,
+		},
+		&ui.Button{
+			Text:     "Icon+Text",
+			Icon:     "DeviceSignalWiFi1BarLock",
+			Colorset: &w.Primary,
 		},
 		&ui.Edit{
 			Target: &editor,
