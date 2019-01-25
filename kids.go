@@ -9,11 +9,19 @@ import (
 
 // Kid holds a UI and its layout/draw state.
 type Kid struct {
-	W      Widget          // UI this state is about.
-	R      image.Rectangle // Location and size within this UI.
-	Draw   State           // Whether UI or its children need a draw.
-	Layout State           // Whether UI or its children need a layout.
-	ID     string          // For (re)storing settings with ReadSettings and WriteSettings. If empty, no settings for the UI will be (re)stored.
+	W      Widget          // widget this state is about.
+	R      image.Rectangle // Location and size within this widget.
+	Draw   State           // Whether widget or its children need a draw.
+	Layout State           // Whether widget or its children need a layout.
+}
+
+// NewKids turns widgets into Kids containing those widgets.
+func NewKids(uis ...Widget) []*Kid {
+	kids := make([]*Kid, len(uis))
+	for i, ui := range uis {
+		kids[i] = &Kid{W: ui}
+	}
+	return kids
 }
 
 // Mark checks if o is its Widget, and if so marks it as needing a layout or draw (forLayout false).

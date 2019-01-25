@@ -39,8 +39,8 @@ func (e *Edit) Draw(w *Window, self *Kid, img draw.Image, orig image.Point, m Mo
 		e.TextBox = tui.NewTextBox(win, styles, self.R.Size())
 		e.TextBox.SetText(rope.New("+/⍳100"))
 	}
-	subimage := img.(*image.RGBA).SubImage(self.R)
-	e.TextBox.Draw(true, subimage.(draw.Image)) // TODO rect, dirty
+	subimage := img.(*image.RGBA).SubImage(self.R.Add(orig).Sub(self.R.Min)) // .Add(orig))
+	e.TextBox.Draw(true, subimage.(draw.Image))                              // TODO rect, dirty
 }
 
 func (e *Edit) Mouse(w *Window, self *Kid, m Mouse, origM Mouse, orig image.Point) (r Result) {
