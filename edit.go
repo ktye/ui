@@ -12,6 +12,7 @@ import (
 	"golang.org/x/mobile/event/mouse"
 )
 
+// Edit is a text editor widget.
 type Edit struct {
 	Target **Edit
 	*tui.TextBox

@@ -17,6 +17,7 @@ import (
 
 func main() {
 	var editor *ui.Edit
+	var repl *ui.Repl
 
 	ui.RegisterIcon("DeviceGPSFixed", icons.DeviceGPSFixed)
 	ui.RegisterIcon("DeviceSignalWiFi1BarLock", icons.DeviceSignalWiFi1BarLock)
@@ -51,6 +52,9 @@ func main() {
 		},
 		&ui.Edit{
 			Target: &editor,
+		},
+		&ui.Repl{
+			Target: &repl,
 		},
 	)
 	w.Render()
