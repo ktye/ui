@@ -7,7 +7,7 @@ import (
 
 	"github.com/eaburns/T/rope"
 	"github.com/eaburns/T/text"
-	tui "github.com/eaburns/T/ui"
+	"github.com/ktye/ui/tb"
 	"golang.org/x/mobile/event/key"
 	"golang.org/x/mobile/event/mouse"
 )
@@ -15,8 +15,16 @@ import (
 // Edit is a text editor widget.
 type Edit struct {
 	Target **Edit
-	*tui.TextBox
+	text   rope.Rope
+	*tb.TextBox
 	mods [4]bool
+}
+
+func (e *Edit) SetText(text rope.Rope) {
+	e.text = text
+	if e.TextBox != nil {
+		e.TextBox.SetText(e.text)
+	}
 }
 
 func (e *Edit) Layout(w *Window, self *Kid, sizeAvail image.Point, force bool) {
@@ -29,15 +37,21 @@ func (e *Edit) Layout(w *Window, self *Kid, sizeAvail image.Point, force bool) {
 
 func (e *Edit) Draw(w *Window, self *Kid, img draw.Image, orig image.Point, m Mouse, force bool) {
 	if e.TextBox == nil {
-		win := tui.NewWin(w.Display.PixelsPerPt * 72.0)
+
+		//win := tui.NewWin(w.Display.PixelsPerPt * 72.0)
 		styles := [4]text.Style{
 			text.Style{FG: w.Regular.Normal.Text, BG: w.Regular.Normal.Background.At(0, 0), Face: w.font.Face},
 			text.Style{FG: w.Primary.Normal.Text, BG: w.Primary.Normal.Background.At(0, 0), Face: w.font.Face},
 			text.Style{FG: w.Primary.Normal.Text, BG: w.Primary.Normal.Background.At(0, 0), Face: w.font.Face},
 			text.Style{FG: w.Primary.Normal.Text, BG: w.Primary.Normal.Background.At(0, 0), Face: w.font.Face},
 		}
-		e.TextBox = tui.NewTextBox(win, styles, self.R.Size())
-		e.TextBox.SetText(rope.New("+/⍳100"))
+
+		e.TextBox = tb.NewTextBox(styles, self.R.Size())
+		if e.text == nil {
+			e.TextBox.SetText(rope.New(""))
+		} else {
+			e.TextBox.SetText(e.text)
+		}
 	}
 	subimage := img.(*image.RGBA).SubImage(self.R.Add(orig).Sub(self.R.Min)) // .Add(orig))
 	e.TextBox.Draw(true, subimage.(draw.Image))                              // TODO rect, dirty
