@@ -135,6 +135,13 @@ func (b *TextBox) Selection() string {
 	return rope.Slice(b.text, b.dots[1].At[0], b.dots[1].At[1]).String()
 }
 
+// ktye: added SetDot
+
+// SetDot sets the current selection.
+func (b *TextBox) SetDot(dot [2]int64) {
+	b.dots[1].At = dot
+}
+
 // textHeight returns the height of the displayed text.
 func (b *TextBox) textHeight() int {
 	var y fixed.Int26_6

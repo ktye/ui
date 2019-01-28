@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/eaburns/T/edit"
 	"github.com/eaburns/T/rope"
 )
 
@@ -33,12 +34,14 @@ func NewSam() Widget {
 	return sam
 }
 
-func (s *Sam) Eval(t string) {
+func (sam *Sam) Eval(t string) {
 	fmt.Println("sam: ", t)
-	_, err := s.edt.EditWrite(t, os.Stdout) // TODO: usd cmd widget as output.
-	if err != nil {
+	_, err := sam.edt.EditWrite(t, os.Stdout) // TODO: usd cmd widget as output.
+	if e, ok := err.(edit.ErrNoCommand); ok {
+		sam.edt.SetDot(e.At)
+	} else if err != nil {
 		fmt.Println(err) // TODO write to cmd widget
 	}
 }
 
-func (s *Sam) Cancel() {}
+func (sam *Sam) Cancel() {}
