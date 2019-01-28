@@ -29,10 +29,10 @@ func (w *Window) Mouse(m mouse.Event) {
 	if m.Modifiers&key.ModShift != 0 {
 		if m.Button == mouse.ButtonWheelUp {
 			w.scale(true)
-			w.Top.Layout = Dirty
+			return
 		} else if m.Button == mouse.ButtonWheelDown {
 			w.scale(false)
-			w.Top.Layout = Dirty
+			return
 		}
 	}
 	if m.Button == 0 || w.origMouse.Button == 0 {

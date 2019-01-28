@@ -23,6 +23,7 @@ import (
 	"github.com/eaburns/T/rope"
 	"github.com/eaburns/T/syntax"
 	"github.com/eaburns/T/text"
+	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
 )
 
@@ -140,6 +141,17 @@ func (b *TextBox) Selection() string {
 // SetDot sets the current selection.
 func (b *TextBox) SetDot(dot [2]int64) {
 	b.dots[1].At = dot
+}
+
+// ktye: added SetFace (for changing fontsize), this could also be SetStyle.
+
+// SetFace sets the font face.
+func (b *TextBox) SetFace(f font.Face) {
+	b.style.Face = f
+	for i := range b.dots {
+		b.dots[i].Style.Face = f
+	}
+	b.dirty = true
 }
 
 // textHeight returns the height of the displayed text.

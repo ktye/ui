@@ -57,4 +57,7 @@ func (w *Window) scale(up bool) {
 		w.font.size--
 	}
 	w.SetFont(w.font.ttf, w.font.size)
+
+	w.Top.Layout = Dirty
+	w.Render()
 }

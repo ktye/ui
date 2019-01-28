@@ -17,7 +17,8 @@ type Edit struct {
 	Target **Edit
 	text   rope.Rope
 	*tb.TextBox
-	mods [4]bool
+	mods     [4]bool
+	fontSize int
 }
 
 func (e *Edit) SetText(text rope.Rope) {
@@ -53,6 +54,13 @@ func (e *Edit) Draw(w *Window, self *Kid, img draw.Image, orig image.Point, m Mo
 			e.TextBox.SetText(e.text)
 		}
 	}
+
+	// We track the last font size update in e.fontSize.
+	if w.font.size != e.fontSize {
+		e.TextBox.SetFace(w.font.Face)
+		e.fontSize = w.font.size
+	}
+
 	subimage := img.(*image.RGBA).SubImage(self.R.Add(orig).Sub(self.R.Min)) // .Add(orig))
 	e.TextBox.Draw(true, subimage.(draw.Image))                              // TODO rect, dirty
 }
