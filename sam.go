@@ -37,7 +37,7 @@ func NewSam() Widget {
 func (sam *Sam) Eval(t string) {
 	fmt.Println("sam: ", t)
 	_, err := sam.edt.EditWrite(t, os.Stdout) // TODO: usd cmd widget as output.
-	if e, ok := err.(edit.ErrNoCommand); ok {
+	if e, ok := err.(edit.NoCommandError); ok {
 		sam.edt.SetDot(e.At)
 	} else if err != nil {
 		fmt.Println(err) // TODO write to cmd widget
