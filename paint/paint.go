@@ -7,6 +7,17 @@ import (
 	"image/draw"
 )
 
+func Border(m draw.Image, r image.Rectangle, c color.Color) {
+	x0 := r.Min.X
+	x1 := r.Max.X - 1
+	y0 := r.Min.Y
+	y1 := r.Max.Y - 1
+	Line(m, image.Pt(x0, y0), image.Pt(x0, y1), c)
+	Line(m, image.Pt(x0, y1), image.Pt(x1, y1), c)
+	Line(m, image.Pt(x1, y1), image.Pt(x1, y0), c)
+	Line(m, image.Pt(x1, y0), image.Pt(x0, y0), c)
+}
+
 func RoundedBorder(m draw.Image, r image.Rectangle, c color.Color) {
 	radius := 3
 	x0 := r.Min.X
