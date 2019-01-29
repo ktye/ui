@@ -10,7 +10,6 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	"io"
 	"io/ioutil"
 	"math"
 	"strconv"
@@ -192,25 +191,6 @@ func (b *TextBox) setHighlighter(highlighter updater) {
 // and returns the diffs applied to the text.
 // If more than 0 diffs are returned, the text box needs to be redrawn.
 func (b *TextBox) Edit(t string) (edit.Diffs, error) { return ed(b, t) }
-
-// ktye: add EditWrite
-
-// EditWrite is like edit, but uses the given writer instead of discarding output.
-func (b *TextBox) EditWrite(t string, w io.Writer) (edit.Diffs, error) {
-	dot := b.dots[1].At
-	diffs, err := edit.Edit(dot, t, w, b.text)
-	if err != nil {
-		return nil, err
-	}
-	if len(diffs) > 0 {
-		dot := b.dots[1].At
-		b.Change(diffs)
-		dot[0] = diffs[len(diffs)-1].At[0]
-		dot[1] = dot[0] + diffs[len(diffs)-1].TextLen()
-		b.dots[1].At = dot
-	}
-	return diffs, nil
-}
 
 func ed(b *TextBox, t string) (edit.Diffs, error) {
 	dot := b.dots[1].At
@@ -820,6 +800,15 @@ func (b *TextBox) Draw(dirty bool, img draw.Image) {
 		h := m.Height + m.Descent
 		drawCursor(b, img, fixed.I(textPadPx), y, y+h)
 	}
+}
+
+// ktye: add Write
+
+// Write appends to the end of the text but does not update dot.
+func (b *TextBox) Write(p []byte) (n int, err error) {
+	b.text = rope.Append(b.text, rope.New(string(p)))
+	b.dirty = true
+	return len(p), nil
 }
 
 func drawLine(b *TextBox, img draw.Image, at int64, y0 fixed.Int26_6, l line) {
