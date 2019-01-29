@@ -1,9 +1,6 @@
 package ui
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/eaburns/T/edit"
 	"github.com/eaburns/T/rope"
 )
@@ -20,8 +17,7 @@ type Sam struct {
 func NewSam() Widget {
 	sam := &Sam{}
 	sam.cmd = &Repl{
-		Reply:       false,
-		Currentline: false,
+		Reply: false,
 	}
 	sam.cmd.SetText(rope.New("commands"))
 	sam.edt = &Edit{}
@@ -35,12 +31,11 @@ func NewSam() Widget {
 }
 
 func (sam *Sam) Eval(t string) {
-	fmt.Println("sam: ", t)
-	_, err := sam.edt.EditWrite(t, os.Stdout) // TODO: usd cmd widget as output.
+	_, err := sam.edt.Edit(t)
 	if e, ok := err.(edit.NoCommandError); ok {
 		sam.edt.SetDot(e.At)
 	} else if err != nil {
-		fmt.Println(err) // TODO write to cmd widget
+		sam.cmd.Write([]byte("\n" + err.Error()))
 	}
 }
 

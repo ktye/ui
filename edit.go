@@ -30,7 +30,6 @@ func (e *Edit) SetText(text rope.Rope) {
 
 func (e *Edit) Layout(w *Window, self *Kid, sizeAvail image.Point, force bool) {
 	self.R = rect(sizeAvail)
-
 	if e.Target != nil {
 		*e.Target = e
 	}
@@ -38,8 +37,6 @@ func (e *Edit) Layout(w *Window, self *Kid, sizeAvail image.Point, force bool) {
 
 func (e *Edit) Draw(w *Window, self *Kid, img draw.Image, orig image.Point, m Mouse, force bool) {
 	if e.TextBox == nil {
-
-		//win := tui.NewWin(w.Display.PixelsPerPt * 72.0)
 		styles := [4]text.Style{
 			text.Style{FG: w.Regular.Normal.Text, BG: w.Regular.Normal.Background.At(0, 0), Face: w.font.Face},
 			text.Style{FG: w.Primary.Normal.Text, BG: w.Primary.Normal.Background.At(0, 0), Face: w.font.Face},
@@ -61,8 +58,8 @@ func (e *Edit) Draw(w *Window, self *Kid, img draw.Image, orig image.Point, m Mo
 		e.fontSize = w.font.size
 	}
 
-	subimage := img.(*image.RGBA).SubImage(self.R.Add(orig).Sub(self.R.Min)) // .Add(orig))
-	e.TextBox.Draw(true, subimage.(draw.Image))                              // TODO rect, dirty
+	subimage := img.(*image.RGBA).SubImage(self.R.Add(orig).Sub(self.R.Min))
+	e.TextBox.Draw(true, subimage.(draw.Image))
 }
 
 func (e *Edit) Mouse(w *Window, self *Kid, m Mouse, origM Mouse, orig image.Point) (r Result) {
