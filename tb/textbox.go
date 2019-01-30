@@ -135,6 +135,11 @@ func (b *TextBox) Selection() string {
 	return rope.Slice(b.text, b.dots[1].At[0], b.dots[1].At[1]).String()
 }
 
+// Dot returns the current dot.
+func (b *TextBox) Dot() [2]int64 {
+	return b.dots[1].At
+}
+
 // ktye: added SetDot
 
 // SetDot sets the current selection.

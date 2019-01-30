@@ -1,10 +1,12 @@
 package ui
 
 import (
+	"fmt"
 	"image"
 	"image/draw"
 	"math"
 
+	"github.com/eaburns/T/edit"
 	"github.com/eaburns/T/rope"
 	"github.com/eaburns/T/text"
 	"github.com/ktye/ui/tb"
@@ -25,6 +27,20 @@ func (e *Edit) SetText(text rope.Rope) {
 	e.text = text
 	if e.TextBox != nil {
 		e.TextBox.SetText(e.text)
+	}
+}
+
+// MarkAddr sets the current dot to the address given as an edit command.
+func (e *Edit) MarkAddr(addr string) error {
+	_, err := e.TextBox.Edit(addr)
+	if ae, ok := err.(edit.NoCommandError); ok {
+		e.TextBox.SetDot(ae.At)
+		return nil
+	} else {
+		if err == nil {
+			return fmt.Errorf("addr is more than an address")
+		}
+		return err
 	}
 }
 

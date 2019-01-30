@@ -1,10 +1,10 @@
 package ui
 
 import (
-	"fmt"
 	"image"
 	"image/draw"
 
+	"github.com/eaburns/T/edit"
 	"github.com/ktye/ui/paint"
 
 	"golang.org/x/mobile/event/key"
@@ -88,13 +88,31 @@ func (r *Repl) Key(w *Window, self *Kid, k key.Event, m Mouse, orig image.Point)
 
 	t := r.Edit.TextBox.Selection()
 	if t == "" {
-		// TODO use current line
-		fmt.Println("TODO: repl: exec current line")
-
+		// Nothing is selected: execute current line.
+		r.Edit.MarkAddr("-+")
+		t = r.Edit.TextBox.Selection()
+	}
+	if len(t) > 0 && t[len(t)-1] == '\n' {
+		t = t[:len(t)-1]
 	}
 	if t != "" {
+		if r.Reply {
+			r.reply(t)
+		}
 		r.Interp.Eval(t)
 	}
 	self.Draw = Dirty
 	return res
+}
+
+// Reply appends s to the end of the text box, if the dot is not on the last line.
+func (r *Repl) reply(s string) {
+	_, err := r.Edit.Edit(`+/\n/`)
+	if e, ok := err.(edit.NoCommandError); ok {
+		dot := r.Edit.Dot()
+		if e.At[0] > dot[1] {
+			r.Edit.Write([]byte("\n" + s))
+		}
+	}
+	// If there is no newline, err is "no match" and we don't have to reply the line.
 }

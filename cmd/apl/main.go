@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/eaburns/T/rope"
 	"github.com/ktye/iv/apl"
 	"github.com/ktye/iv/apl/numbers"
 	"github.com/ktye/iv/apl/operators"
@@ -12,7 +13,8 @@ import (
 
 func main() {
 	var interp interp
-	repl := &ui.Repl{}
+	repl := &ui.Repl{Reply: true}
+	repl.SetText(rope.New("\t"))
 	interp.repl = repl
 	repl.Interp = &interp
 
@@ -47,10 +49,12 @@ type interp struct {
 }
 
 func (i *interp) Eval(s string) {
+	i.repl.Write([]byte{'\n'})
 	if err := i.apl.ParseAndEval(s); err != nil {
-		i.repl.Write([]byte("\n" + err.Error()))
+		i.repl.Write([]byte(err.Error()))
 	}
 	i.repl.Write([]byte("\t"))
+	i.repl.Edit.MarkAddr("$")
 }
 
 func (i *interp) Cancel() {}
