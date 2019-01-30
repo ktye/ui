@@ -86,7 +86,7 @@ func (e *Edit) Mouse(w *Window, self *Kid, m Mouse, origM Mouse, orig image.Poin
 }
 
 func (e *Edit) Key(w *Window, self *Kid, k key.Event, m Mouse, orig image.Point) (res Result) {
-	e.mods = e.keyEvent(e.mods, k)
+	e.mods = e.keyEvent(w, e.mods, k)
 	res.Consumed = true
 	self.Draw = Dirty
 	return res
@@ -140,13 +140,32 @@ func (edt *Edit) mouseEvent(e mouse.Event) {
 	}
 }
 
-func (edt *Edit) keyEvent(mods [4]bool, e key.Event) [4]bool {
-	w := edt.TextBox
+func (edt *Edit) keyEvent(w *Window, mods [4]bool, e key.Event) [4]bool {
 	if e.Direction == key.DirNone {
 		e.Direction = key.DirPress
 	}
 	if e.Direction == key.DirPress && dirKeyCode[e.Code] {
 		edt.dirKey(e)
+		return mods
+	}
+
+	// Copy/Paste/Cut: Cntrl-C/V/X
+	if e.Code == key.CodeC && mods[3] {
+		if e.Direction == key.DirRelease {
+			edt.TextBox.Copy(w.clipboard)
+		}
+		return mods
+	}
+	if e.Code == key.CodeV && mods[3] {
+		if e.Direction == key.DirRelease {
+			edt.TextBox.Paste(w.clipboard)
+		}
+		return mods
+	}
+	if e.Code == key.CodeX && mods[3] {
+		if e.Direction == key.DirRelease {
+			edt.TextBox.Cut(w.clipboard)
+		}
 		return mods
 	}
 
@@ -160,7 +179,7 @@ func (edt *Edit) keyEvent(mods [4]bool, e key.Event) [4]bool {
 	}
 	if e.Rune > 0 {
 		if e.Direction == key.DirPress {
-			w.Rune(e.Rune)
+			edt.TextBox.Rune(e.Rune)
 		}
 		return mods
 	}

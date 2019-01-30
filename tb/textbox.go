@@ -18,6 +18,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/eaburns/T/clipboard"
 	"github.com/eaburns/T/edit"
 	"github.com/eaburns/T/rope"
 	"github.com/eaburns/T/syntax"
@@ -236,33 +237,34 @@ func (b *TextBox) Change(diffs edit.Diffs) {
 	}
 }
 
-/* ktye: TODO Copy Paste
+// ktye: added clipboard as a parameter to Copy, Paste, Cut
+
 // Copy copies the selected text into the system clipboard.
-func (b *TextBox) Copy() error {
+func (b *TextBox) Copy(cb clipboard.Clipboard) error {
 	r := rope.Slice(b.text, b.dots[1].At[0], b.dots[1].At[1])
-	return b.win.clipboard.Store(r)
+	return cb.Store(r)
 }
 
 // Paste pastes the text from the system clipboard to the selection.
-func (b *TextBox) Paste() error {
-	r, err := b.win.clipboard.Fetch()
+func (b *TextBox) Paste(cb clipboard.Clipboard) error {
+	r, err := cb.Fetch()
 	if err != nil {
 		return err
 	}
 	b.Change(edit.Diffs{{At: b.dots[1].At, Text: r}})
+	b.dots[1].At[1] = b.dots[1].At[0] + r.Len() // ktye: set dot to pasted text
 	return nil
 }
 
 // Cut copies the selected text into the system clipboard
 // and deletes it from the text box.
-func (b *TextBox) Cut() error {
-	if err := b.Copy(); err != nil {
+func (b *TextBox) Cut(cb clipboard.Clipboard) error {
+	if err := b.Copy(cb); err != nil {
 		return err
 	}
 	b.Change(edit.Diffs{{At: b.dots[1].At, Text: rope.Empty()}})
 	return nil
 }
-*/
 
 // Resize handles a resize event.
 // The text box must always be redrawn after being resized.

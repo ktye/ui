@@ -8,6 +8,7 @@ import (
 	"image/draw"
 	"io"
 
+	"github.com/eaburns/T/clipboard"
 	"github.com/ktye/ui/display"
 	"golang.org/x/exp/shiny/screen"
 )
@@ -33,7 +34,8 @@ type Window struct {
 	font             font
 	lastMouseWidget  Widget
 
-	keyboard KeyTranslator
+	keyboard  KeyTranslator
+	clipboard clipboard.Clipboard
 }
 
 // New returns a new window.
@@ -48,6 +50,7 @@ func New(opt *screen.NewWindowOptions) *Window {
 
 	w.defaultFont()
 	w.defaultColors()
+	w.clipboard = clipboard.New()
 
 	go func() {
 		for {
