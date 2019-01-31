@@ -8,6 +8,7 @@ import (
 	"github.com/ktye/ui/paint"
 
 	"golang.org/x/mobile/event/key"
+	"golang.org/x/mobile/event/mouse"
 )
 
 // Repl is like a text editor widget, but sends commands to an interpreter.
@@ -55,7 +56,20 @@ func (r *Repl) Draw(w *Window, self *Kid, img draw.Image, orig image.Point, m Mo
 	self.R = sr
 }
 
-// TODO: Mouse Execute selection on button 3
+// Mouse button 3 executes the current selection or current line.
+// Other mouse events are propagated to the edit widget.
+func (r *Repl) Mouse(w *Window, self *Kid, m Mouse, origM Mouse, orig image.Point) (res Result) {
+	if m.Button == 3 {
+		res.Consumed = true
+		if m.Direction == mouse.DirPress {
+			r.exec()
+			self.Draw = Dirty
+			return res
+		}
+		return res
+	}
+	return r.Edit.Mouse(w, self, m, origM, orig)
+}
 
 // Keys are forwarded to the underlying edit widget, except for special handling of ESC and ENTER.
 // On ENTER the current selected text is interpreted.
@@ -86,6 +100,12 @@ func (r *Repl) Key(w *Window, self *Kid, k key.Event, m Mouse, orig image.Point)
 		return res
 	}
 
+	r.exec()
+	self.Draw = Dirty
+	return res
+}
+
+func (r *Repl) exec() {
 	t := r.Edit.TextBox.Selection()
 	if t == "" {
 		// Nothing is selected: execute current line.
@@ -101,8 +121,6 @@ func (r *Repl) Key(w *Window, self *Kid, k key.Event, m Mouse, orig image.Point)
 		}
 		r.Interp.Eval(t)
 	}
-	self.Draw = Dirty
-	return res
 }
 
 // Reply appends s to the end of the text box, if the dot is not on the last line.
