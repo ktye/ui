@@ -151,19 +151,19 @@ func (edt *Edit) keyEvent(w *Window, mods [4]bool, e key.Event) [4]bool {
 
 	// Copy/Paste/Cut: Cntrl-C/V/X
 	if e.Code == key.CodeC && mods[3] {
-		if e.Direction == key.DirRelease {
+		if e.Direction == key.DirPress {
 			edt.TextBox.Copy(w.clipboard)
 		}
 		return mods
 	}
 	if e.Code == key.CodeV && mods[3] {
-		if e.Direction == key.DirRelease {
+		if e.Direction == key.DirPress {
 			edt.TextBox.Paste(w.clipboard)
 		}
 		return mods
 	}
 	if e.Code == key.CodeX && mods[3] {
-		if e.Direction == key.DirRelease {
+		if e.Direction == key.DirPress {
 			edt.TextBox.Cut(w.clipboard)
 		}
 		return mods
