@@ -9,9 +9,10 @@ import (
 // connected with a text editor widget below.
 type Sam struct {
 	Split
-	cmd *Repl
-	edt *Edit
-	w   *Window
+	Quit func() (e Event) // executed for q command.
+	cmd  *Repl
+	edt  *Edit
+	w    *Window
 }
 
 // NewSam returns a Sam widget.
@@ -35,6 +36,12 @@ func (sam *Sam) SetTexts(cmd, edt rope.Rope) {
 }
 
 func (sam *Sam) Eval(t string) {
+	if t == "q" {
+		if sam.Quit != nil {
+			sam.Quit() // result is ignored
+		}
+		return
+	}
 	_, err := sam.edt.Edit(t)
 	if e, ok := err.(edit.NoCommandError); ok {
 		sam.edt.SetDot(e.At)

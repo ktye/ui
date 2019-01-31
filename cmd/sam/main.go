@@ -8,6 +8,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/eaburns/T/rope"
 	"github.com/ktye/ui"
@@ -19,6 +20,10 @@ func main() {
 
 	sam := ui.NewSam(w)
 	sam.SetTexts(rope.New("command window\n+/is/"), rope.New("this is line one\nthis is line 2"))
+	sam.Quit = func() ui.Event {
+		os.Exit(0)
+		return ui.Event{}
+	}
 
 	w.Top.W = sam
 	w.Render()
