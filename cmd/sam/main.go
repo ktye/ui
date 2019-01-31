@@ -9,6 +9,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/eaburns/T/rope"
 	"github.com/ktye/ui"
 )
 
@@ -16,7 +17,10 @@ func main() {
 	w := ui.New(nil)
 	w.SetKeyTranslator(ui.AplKeyboard{})
 
-	w.Top.W = ui.NewSam()
+	sam := ui.NewSam(w)
+	sam.SetTexts(rope.New("command window\n+/is/"), rope.New("this is line one\nthis is line 2"))
+
+	w.Top.W = sam
 	w.Render()
 
 	for {

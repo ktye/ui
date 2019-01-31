@@ -11,23 +11,27 @@ type Sam struct {
 	Split
 	cmd *Repl
 	edt *Edit
+	w   *Window
 }
 
 // NewSam returns a Sam widget.
-func NewSam() Widget {
-	sam := &Sam{}
+func NewSam(w *Window) *Sam {
+	sam := &Sam{w: w}
 	sam.cmd = &Repl{
 		Reply: false,
 	}
-	sam.cmd.SetText(rope.New("commands"))
 	sam.edt = &Edit{}
-	sam.edt.SetText(rope.New("this is text\nsecond line\n"))
 	sam.Split = Split{
 		Vertical: true,
 		Kids:     NewKids(sam.cmd, sam.edt),
 	}
 	sam.cmd.Interp = sam
 	return sam
+}
+
+func (sam *Sam) SetTexts(cmd, edt rope.Rope) {
+	sam.cmd.SetText(cmd)
+	sam.edt.SetText(edt)
 }
 
 func (sam *Sam) Eval(t string) {
@@ -37,6 +41,7 @@ func (sam *Sam) Eval(t string) {
 	} else if err != nil {
 		sam.cmd.Write([]byte("\n" + err.Error()))
 	}
+	sam.w.MarkDraw(sam.edt)
 }
 
 func (sam *Sam) Cancel() {}
