@@ -107,12 +107,9 @@ func (r *Repl) Key(w *Window, self *Kid, k key.Event, m Mouse, orig image.Point)
 
 // Reply appends s to the end of the text box, if the dot is not on the last line.
 func (r *Repl) reply(s string) {
-	_, err := r.Edit.Edit(`+/\n/`)
-	if e, ok := err.(edit.NoCommandError); ok {
-		dot := r.Edit.Dot()
-		if e.At[0] > dot[1] {
-			r.Edit.Write([]byte("\n" + s))
-		}
+	_, err := r.Edit.Edit("+")
+	if _, ok := err.(edit.NoCommandError); ok {
+		r.Edit.Write([]byte("\n" + s))
 	}
-	// If there is no newline, err is "no match" and we don't have to reply the line.
+	// If we are on the last line, the error is address not found.
 }
