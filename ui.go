@@ -128,23 +128,23 @@ func (w *Window) Input(e Input) {
 		w.Mouse(e.Mouse)
 	case InputKey:
 		if logInputs {
-			fmt.Printf("duit: key %+v\n", e.Key)
+			fmt.Printf("ui: key %+v\n", e.Key)
 		}
 		w.Key(e.Key)
 	case InputSize:
 		if logInputs {
-			fmt.Printf("duit: size")
+			fmt.Printf("ui: size")
 		}
 		w.Resize()
 	case InputFunc:
 		if logInputs {
-			fmt.Printf("duit: func")
+			fmt.Printf("ui: func")
 		}
 		//e.Func()
 		//w.Render()
 	case InputError:
 		if logInputs {
-			fmt.Printf("duit: error: %s", e.Error)
+			fmt.Printf("ui: error: %s", e.Error)
 		}
 	}
 }
@@ -161,7 +161,7 @@ func (w *Window) MarkDraw(widget Widget) {
 		w.Top.Draw = Dirty
 	} else {
 		if !w.Top.W.Mark(&w.Top, widget, false) {
-			fmt.Printf("duit: markdraw %T: nothing marked\n", widget)
+			fmt.Printf("ui: markdraw %T: nothing marked\n", widget)
 		}
 	}
 }
