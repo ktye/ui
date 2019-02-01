@@ -2,9 +2,9 @@ package ui
 
 import (
 	"image/color"
+	"strings"
 
 	"github.com/eaburns/T/edit"
-	"github.com/eaburns/T/rope"
 	"github.com/eaburns/T/text"
 )
 
@@ -12,34 +12,29 @@ import (
 // connected with a text editor widget below.
 type Sam struct {
 	Split
-	Quit func() (e Event) // executed for q command.
-	cmd  *Repl
-	edt  *Edit
-	w    *Window
+	Commands map[string]func(*Sam, string)
+	Cmd      *Repl
+	Edt      *Edit
+	w        *Window
 }
 
 // NewSam returns a Sam widget.
 func NewSam(w *Window) *Sam {
 	sam := &Sam{w: w}
-	sam.cmd = &Repl{
+	sam.Cmd = &Repl{
 		Reply: false,
 	}
-	sam.cmd.Edit.styles = sam.styles(argb(0xeaffffff), argb(0x9eeeeeff))
-	sam.edt = &Edit{}
-	sam.edt.styles = sam.styles(argb(0xffffeaff), argb(0xeeee9eff))
+	sam.Cmd.Edit.styles = sam.styles(argb(0xeaffffff), argb(0x9eeeeeff))
+	sam.Edt = &Edit{}
+	sam.Edt.styles = sam.styles(argb(0xffffeaff), argb(0xeeee9eff))
 	sam.Split = Split{
 		Vertical: true,
 		Gutter:   true,
 		Ratio:    -0.236,
-		Kids:     NewKids(sam.cmd, sam.edt),
+		Kids:     NewKids(sam.Cmd, sam.Edt),
 	}
-	sam.cmd.Interp = sam
+	sam.Cmd.Interp = sam
 	return sam
-}
-
-func (sam *Sam) SetTexts(cmd, edt rope.Rope) {
-	sam.cmd.SetText(cmd)
-	sam.edt.SetText(edt)
 }
 
 func (sam *Sam) styles(bg1, bg2 color.Color) []text.Style {
@@ -52,19 +47,24 @@ func (sam *Sam) styles(bg1, bg2 color.Color) []text.Style {
 }
 
 func (sam *Sam) Eval(t string) {
-	if t == "q" {
-		if sam.Quit != nil {
-			sam.Quit() // result is ignored
+	// Try user defined commands.
+	if len(t) > 0 && sam.Commands != nil {
+		for c, f := range sam.Commands {
+			if strings.HasPrefix(t, c) {
+				f(sam, strings.TrimPrefix(t, c))
+				return
+			}
 		}
-		return
 	}
-	_, err := sam.edt.Edit(t)
+
+	// Built-in editing commands.
+	_, err := sam.Edt.Edit(t)
 	if e, ok := err.(edit.NoCommandError); ok {
-		sam.edt.SetDot(e.At)
+		sam.Edt.SetDot(e.At)
 	} else if err != nil {
-		sam.cmd.Write([]byte("\n" + err.Error()))
+		sam.Cmd.Write([]byte("\n" + err.Error()))
 	}
-	sam.w.MarkDraw(sam.edt)
+	sam.w.MarkDraw(sam.Edt)
 }
 
 func (sam *Sam) Cancel() {}

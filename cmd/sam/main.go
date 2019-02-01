@@ -19,12 +19,11 @@ func main() {
 	w.SetKeyTranslator(ui.AplKeyboard{})
 
 	sam := ui.NewSam(w)
-	sam.SetTexts(rope.New("command window\n+/is/"), rope.New("this is line one\nthis is line 2"))
-	sam.Quit = func() ui.Event {
-		os.Exit(0)
-		return ui.Event{}
+	sam.Cmd.SetText(rope.New("command window\n+/is/"))
+	sam.Edt.SetText(rope.New("this is line one\nthis is line 2"))
+	sam.Commands = map[string]func(*ui.Sam, string){
+		"q": func(s *ui.Sam, args string) { os.Exit(0) },
 	}
-
 	w.Top.W = sam
 	w.Render()
 
