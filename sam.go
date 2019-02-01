@@ -1,8 +1,11 @@
 package ui
 
 import (
+	"image/color"
+
 	"github.com/eaburns/T/edit"
 	"github.com/eaburns/T/rope"
+	"github.com/eaburns/T/text"
 )
 
 // Sam is a vertically split widget that contains a command widget (sam editing commands)
@@ -21,7 +24,9 @@ func NewSam(w *Window) *Sam {
 	sam.cmd = &Repl{
 		Reply: false,
 	}
+	sam.cmd.Edit.styles = sam.styles(argb(0xeaffffff), argb(0x9eeeeeff))
 	sam.edt = &Edit{}
+	sam.edt.styles = sam.styles(argb(0xffffeaff), argb(0xeeee9eff))
 	sam.Split = Split{
 		Vertical: true,
 		Kids:     NewKids(sam.cmd, sam.edt),
@@ -33,6 +38,15 @@ func NewSam(w *Window) *Sam {
 func (sam *Sam) SetTexts(cmd, edt rope.Rope) {
 	sam.cmd.SetText(cmd)
 	sam.edt.SetText(edt)
+}
+
+func (sam *Sam) styles(bg1, bg2 color.Color) []text.Style {
+	return []text.Style{
+		text.Style{FG: color.Black, BG: bg1, Face: sam.w.font.Face},
+		text.Style{FG: color.Black, BG: bg2, Face: sam.w.font.Face},
+		text.Style{FG: color.Black, BG: argb(0x99994CFF), Face: sam.w.font.Face},
+		text.Style{FG: color.Black, BG: bg2, Face: sam.w.font.Face},
+	}
 }
 
 func (sam *Sam) Eval(t string) {

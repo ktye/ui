@@ -20,6 +20,7 @@ type Edit struct {
 	text   rope.Rope
 	*tb.TextBox
 	mods     [4]bool
+	styles   []text.Style
 	fontSize int
 }
 
@@ -58,6 +59,11 @@ func (e *Edit) Draw(w *Window, self *Kid, img draw.Image, orig image.Point, m Mo
 			text.Style{FG: w.Primary.Normal.Text, BG: w.Primary.Normal.Background.At(0, 0), Face: w.font.Face},
 			text.Style{FG: w.Primary.Normal.Text, BG: w.Primary.Normal.Background.At(0, 0), Face: w.font.Face},
 			text.Style{FG: w.Primary.Normal.Text, BG: w.Primary.Normal.Background.At(0, 0), Face: w.font.Face},
+		}
+		if len(e.styles) > 0 && len(e.styles) <= 4 {
+			for i, s := range e.styles {
+				styles[i] = s
+			}
 		}
 
 		e.TextBox = tb.NewTextBox(styles, self.R.Size())
