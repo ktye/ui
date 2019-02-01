@@ -16,6 +16,7 @@ type Split struct {
 	Ratio    float64 // (a-b)/(a+b)
 	Kids     []*Kid  // 2 Kids that should be split.
 	size     image.Point
+	sizes    [2]int
 }
 
 func (s *Split) Layout(w *Window, self *Kid, sizeAvail image.Point, force bool) {
@@ -37,6 +38,7 @@ func (s *Split) Layout(w *Window, self *Kid, sizeAvail image.Point, force bool) 
 	}
 	b := size - a
 	sz := [2]int{a, b}
+	s.sizes = sz
 	if s.Vertical {
 		s.Kids[0].W.Layout(w, s.Kids[0], image.Pt(sizeAvail.X, sz[0]), true)
 		s.Kids[1].W.Layout(w, s.Kids[1], image.Pt(sizeAvail.X, sz[1]), true)
@@ -50,6 +52,13 @@ func (s *Split) Layout(w *Window, self *Kid, sizeAvail image.Point, force bool) 
 }
 
 func (s *Split) Draw(w *Window, self *Kid, img draw.Image, orig image.Point, m Mouse, force bool) {
+	pt := orig.Add(image.Point{s.sizes[0], 0})
+	gutter := image.Rectangle{pt, pt.Add(image.Point{s.Gutter, s.size.Y})}
+	if s.Vertical {
+		pt := orig.Add(image.Point{0, s.sizes[0]})
+		gutter = image.Rectangle{pt, pt.Add(image.Point{s.size.X, s.Gutter})}
+	}
+	draw.Draw(img, gutter, &image.Uniform{w.Gutter}, image.ZP, draw.Src)
 	KidsDraw(w, self, s.Kids, s.size, nil, img, orig, m, force)
 }
 
