@@ -145,7 +145,8 @@ func (b *TextBox) Dot() [2]int64 {
 
 // SetDot sets the current selection.
 func (b *TextBox) SetDot(dot [2]int64) {
-	b.dots[1].At = dot
+	setDot(b, 1, dot[0], dot[1])
+	showAddr(b, dot[0]) // why is this is not triggered by setDot?
 }
 
 // ktye: added SetFace (for changing fontsize), this could also be SetStyle.
