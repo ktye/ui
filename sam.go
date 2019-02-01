@@ -29,6 +29,7 @@ func NewSam(w *Window) *Sam {
 	sam.edt.styles = sam.styles(argb(0xffffeaff), argb(0xeeee9eff))
 	sam.Split = Split{
 		Vertical: true,
+		Gutter:   1,
 		Kids:     NewKids(sam.cmd, sam.edt),
 	}
 	sam.cmd.Interp = sam
