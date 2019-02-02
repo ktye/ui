@@ -73,7 +73,7 @@ func (sam *Sam) Eval(t string) {
 	if e, ok := err.(edit.NoCommandError); ok {
 		sam.Edt.SetDot(e.At)
 	} else if err != nil {
-		sam.Cmd.Write([]byte("\n" + err.Error()))
+		sam.Cmd.AppendText(err.Error())
 	}
 	sam.w.MarkDraw(sam.Edt)
 }

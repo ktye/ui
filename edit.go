@@ -34,6 +34,24 @@ func (e *Edit) SetText(text rope.Rope) {
 	}
 }
 
+// AppendText appends the string to the end.
+// If there is no newline at the end, it first inserts a newline.
+func (e *Edit) AppendText(s string) {
+	s = strings.Replace(s, `\`, `\\`, -1)
+	s = strings.Replace(s, "\n", `\n`, -1)
+	s = strings.Replace(s, "\t", `\t`, -1)
+	s = strings.Replace(s, "/", `\/`, -1)
+	_, err := e.Edit(`/\n$/`)
+	if _, ok := err.(edit.NoCommandError); ok == false {
+		s = "\\n" + s // No newline at EOF
+	}
+	t := "$a/" + s + "/"
+	_, err = e.Edit(t)
+	if err != nil {
+		fmt.Printf("ui/edit: %q %s\n", t, err)
+	}
+}
+
 // MarkAddr sets the current dot to the address given as an edit command.
 func (e *Edit) MarkAddr(addr string) error {
 	_, err := e.TextBox.Edit(addr)
