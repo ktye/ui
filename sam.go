@@ -29,7 +29,7 @@ func NewSam(w *Window) *Sam {
 	sam.Edt = &Edit{}
 	sam.Edt.styles = sam.styles(argb(0xffffeaff), argb(0xeeee9eff), argb(0xff0000ff))
 	sam.Split = Split{
-		Vertical: true,
+		Vertical: false,
 		Gutter:   true,
 		Ratio:    -0.236,
 		Kids:     NewKids(sam.Cmd, sam.Edt),
