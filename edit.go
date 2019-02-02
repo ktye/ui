@@ -18,8 +18,9 @@ import (
 
 // Edit is a text editor widget.
 type Edit struct {
-	Target **Edit
-	text   rope.Rope
+	Target  **Edit
+	Execute func(*Edit, string)
+	text    rope.Rope
 	*tb.TextBox
 	mods     [4]bool
 	styles   []text.Style
@@ -91,7 +92,7 @@ func (e *Edit) Mouse(w *Window, self *Kid, m Mouse, origM Mouse, orig image.Poin
 
 	// Search on Button-3 release.
 	// If Button-3 marked text, it is used, otherwise the current dot is used.
-	if b == -3 {
+	if b == -2 || b == -3 {
 		if dot[0] != dot[1] {
 			e.TextBox.SetDot(dot)
 		} else {
@@ -99,11 +100,18 @@ func (e *Edit) Mouse(w *Window, self *Kid, m Mouse, origM Mouse, orig image.Poin
 		}
 		sel := e.TextBox.Selection()
 		if len(sel) > 0 {
-			t := re1.Escape(sel)
-			t = strings.Replace(t, "\n", `\n`, -1)
-			t = "+/" + t + "/"
-			if err := e.MarkAddr(t); err != nil {
-				fmt.Println("ui/edit:", err)
+			if b == -3 {
+				// Search on Button 3
+				t := re1.Escape(sel)
+				t = strings.Replace(t, "\n", `\n`, -1)
+				t = strings.Replace(t, "/", `\/`, -1)
+				t = "+/" + t + "/"
+				if err := e.MarkAddr(t); err != nil {
+					fmt.Printf("ui/edit: %s %s", t, err)
+				}
+			} else if b == -2 && e.Execute != nil {
+				// Execute on Button 2
+				e.Execute(e, sel)
 			}
 		}
 	}

@@ -2,7 +2,7 @@
 
 This is a demonstration of the sam widget.
 
-## TODO
+It does not read or write files and can be customized further.
 
-- accept files on the command line
-- write files
+An example is `github.com/ktye/iv/aplextra/u/edit.go` that has additional commands
+and reads files from a custom file system.

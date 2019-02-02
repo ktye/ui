@@ -13,6 +13,7 @@ import (
 type Sam struct {
 	Split
 	Commands map[string]func(*Sam, string)
+	exec     func(*Sam, string)
 	Cmd      *Repl
 	Edt      *Edit
 	w        *Window
@@ -24,9 +25,9 @@ func NewSam(w *Window) *Sam {
 	sam.Cmd = &Repl{
 		Reply: false,
 	}
-	sam.Cmd.Edit.styles = sam.styles(argb(0xeaffffff), argb(0x9eeeeeff))
+	sam.Cmd.Edit.styles = sam.styles(argb(0xeaffffff), argb(0x9eeeeeff), argb(0xff0000ff))
 	sam.Edt = &Edit{}
-	sam.Edt.styles = sam.styles(argb(0xffffeaff), argb(0xeeee9eff))
+	sam.Edt.styles = sam.styles(argb(0xffffeaff), argb(0xeeee9eff), argb(0xff0000ff))
 	sam.Split = Split{
 		Vertical: true,
 		Gutter:   true,
@@ -37,11 +38,21 @@ func NewSam(w *Window) *Sam {
 	return sam
 }
 
-func (sam *Sam) styles(bg1, bg2 color.Color) []text.Style {
+// SetExec sets a callback for button-2 commands to both, the cmd and edt window.
+func (sam *Sam) SetExec(e func(*Sam, string)) {
+	sam.Cmd.Execute = func(ed *Edit, s string) {
+		e(sam, s)
+	}
+	sam.Edt.Execute = func(ed *Edit, s string) {
+		e(sam, s)
+	}
+}
+
+func (sam *Sam) styles(bg1, bg2, bg3 color.Color) []text.Style {
 	return []text.Style{
 		text.Style{FG: color.Black, BG: bg1, Face: sam.w.font.Face},
 		text.Style{FG: color.Black, BG: bg2, Face: sam.w.font.Face},
-		text.Style{FG: color.Black, BG: argb(0x99994CFF), Face: sam.w.font.Face},
+		text.Style{FG: color.Black, BG: bg3, Face: sam.w.font.Face},
 		text.Style{FG: color.Black, BG: bg2, Face: sam.w.font.Face},
 	}
 }
