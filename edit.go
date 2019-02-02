@@ -5,8 +5,10 @@ import (
 	"image"
 	"image/draw"
 	"math"
+	"strings"
 
 	"github.com/eaburns/T/edit"
+	"github.com/eaburns/T/re1"
 	"github.com/eaburns/T/rope"
 	"github.com/eaburns/T/text"
 	"github.com/ktye/ui/tb"
@@ -85,7 +87,27 @@ func (e *Edit) Draw(w *Window, self *Kid, img draw.Image, orig image.Point, m Mo
 }
 
 func (e *Edit) Mouse(w *Window, self *Kid, m Mouse, origM Mouse, orig image.Point) (r Result) {
-	e.mouseEvent(m.Event)
+	b, dot := e.mouseEvent(m.Event)
+
+	// Search on Button-3 release.
+	// If Button-3 marked text, it is used, otherwise the current dot is used.
+	if b == -3 {
+		if dot[0] != dot[1] {
+			e.TextBox.SetDot(dot)
+		} else {
+			dot = e.TextBox.Dot()
+		}
+		sel := e.TextBox.Selection()
+		if len(sel) > 0 {
+			t := re1.Escape(sel)
+			t = strings.Replace(t, "\n", `\n`, -1)
+			t = "+/" + t + "/"
+			if err := e.MarkAddr(t); err != nil {
+				fmt.Println("ui/edit:", err)
+			}
+		}
+	}
+
 	r.Consumed = true
 	self.Draw = Dirty // Let T decide when to draw. Not sure if that draws too often.
 	return r
@@ -116,7 +138,7 @@ func (e *Edit) Mark(self *Kid, o Widget, forLayout bool) (marked bool) {
 
 // From T.main:
 
-func (edt *Edit) mouseEvent(e mouse.Event) {
+func (edt *Edit) mouseEvent(e mouse.Event) (int, [2]int64) {
 	w := edt.TextBox
 	switch pt := image.Pt(int(e.X), int(e.Y)); {
 	case e.Button == mouse.ButtonWheelUp:
@@ -138,12 +160,13 @@ func (edt *Edit) mouseEvent(e mouse.Event) {
 		w.Click(pt, int(e.Button))
 
 	case e.Direction == mouse.DirRelease:
-		w.Click(pt, -int(e.Button))
+		return w.Click(pt, -int(e.Button))
 
 	case e.Direction == mouse.DirStep:
 		w.Click(pt, int(e.Button))
 		w.Click(pt, -int(e.Button))
 	}
+	return 0, [2]int64{0, 0}
 }
 
 func (edt *Edit) keyEvent(w *Window, mods [4]bool, e key.Event) [4]bool {

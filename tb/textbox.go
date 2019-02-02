@@ -129,7 +129,7 @@ func (b *TextBox) SetText(text rope.Rope) {
 	dirtyLines(b)
 }
 
-// ktye: added Selection
+// ktye: added Selection, Dot, Dotn, SetDot, Dot
 
 // Selection returns text that is selected with button-1.
 func (b *TextBox) Selection() string {
@@ -141,7 +141,10 @@ func (b *TextBox) Dot() [2]int64 {
 	return b.dots[1].At
 }
 
-// ktye: added SetDot
+// Dot returns the dot n.
+func (b *TextBox) Dotn(n int) [2]int64 {
+	return b.dots[n].At
+}
 
 // SetDot sets the current selection.
 func (b *TextBox) SetDot(dot [2]int64) {
