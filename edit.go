@@ -123,9 +123,7 @@ func (e *Edit) Mouse(w *Window, self *Kid, m Mouse, origM Mouse, orig image.Poin
 		if len(sel) > 0 {
 			if b == -3 {
 				// Search on Button 3
-				t := re1.Escape(sel)
-				t = strings.Replace(t, "\n", `\n`, -1)
-				t = strings.Replace(t, "/", `\/`, -1)
+				t := e.Escape(sel)
 				t = "+/" + t + "/"
 				if err := e.MarkAddr(t); err != nil {
 					fmt.Printf("ui/edit: %s %s", t, err)
@@ -140,6 +138,14 @@ func (e *Edit) Mouse(w *Window, self *Kid, m Mouse, origM Mouse, orig image.Poin
 	r.Consumed = true
 	self.Draw = Dirty // Let T decide when to draw. Not sure if that draws too often.
 	return r
+}
+
+// Escape a string that it can be inserted/appended with "a/"+string"+"/".
+func (e *Edit) Escape(t string) string {
+	t = re1.Escape(t)
+	t = strings.Replace(t, "\n", `\n`, -1)
+	t = strings.Replace(t, "/", `\/`, -1)
+	return t
 }
 
 func (e *Edit) Key(w *Window, self *Kid, k key.Event, m Mouse, orig image.Point) (res Result) {
