@@ -20,6 +20,7 @@ import (
 type Edit struct {
 	Target  **Edit
 	Execute func(*Edit, string)
+	Nowrap  bool
 	text    rope.Rope
 	*tb.TextBox
 	mods     [4]bool
@@ -101,8 +102,10 @@ func (e *Edit) Draw(w *Window, self *Kid, img draw.Image, orig image.Point, m Mo
 		e.fontSize = w.font.size
 	}
 
-	subimage := img.(*image.RGBA).SubImage(self.R.Add(orig).Sub(self.R.Min))
-	e.TextBox.Draw(true, subimage.(draw.Image))
+	rect := self.R.Add(orig).Sub(self.R.Min)
+	//rect.Max = rect.Max.Add(image.Point{1000, 0}) //
+	subimage := img.(*image.RGBA).SubImage(rect)
+	e.TextBox.Draw(true, subimage.(draw.Image), e.Nowrap)
 }
 
 func (e *Edit) Mouse(w *Window, self *Kid, m Mouse, origM Mouse, orig image.Point) (r Result) {

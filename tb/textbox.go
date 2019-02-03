@@ -759,9 +759,14 @@ func (b *TextBox) Rune(r rune) {
 	setDot(b, 1, b.dots[1].At[1], b.dots[1].At[1])
 }
 
+// ktye: add nowrap
+
 // Draw draws the text box to the image with the upper-left of the box at 0,0.
-func (b *TextBox) Draw(dirty bool, img draw.Image) {
+func (b *TextBox) Draw(dirty bool, img draw.Image, nowrap bool) {
 	size := img.Bounds().Size()
+	if nowrap {
+		size.X = 2048 // Some big value.
+	}
 	if dirty || size != b.size {
 		b.size = size
 		dirtyLines(b)
