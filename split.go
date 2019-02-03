@@ -75,8 +75,11 @@ func (s *Split) Draw(w *Window, self *Kid, img draw.Image, orig image.Point, m M
 	KidsDraw(w, self, s.Kids, s.size, nil, img, orig, m, force)
 }
 
+// Mouse handles mouse events.
+// The gutter can be dragged with button 1.
+// Button-3 click on the gutter flips orientation.
+// Gutter clicks are recognized at +/- 5 pixels.
 func (s *Split) Mouse(w *Window, self *Kid, m Mouse, origM Mouse, orig image.Point) (r Result) {
-	// Clicks are recognized at +/-5 points around the gutter.
 	pt := image.Point{s.sizes[0] - 5, 0}
 	gutter := image.Rectangle{pt, pt.Add(image.Point{10, s.size.Y})}
 	if s.Vertical {
@@ -100,6 +103,13 @@ func (s *Split) Mouse(w *Window, self *Kid, m Mouse, origM Mouse, orig image.Poi
 	} else if m.Button == 1 && m.Direction == mouse.DirPress && m.In(gutter) {
 		r.Consumed = true
 		s.dragging = true
+		return r
+	} else if m.Button == 3 {
+		r.Consumed = true
+		if m.Direction == mouse.DirRelease {
+			s.Vertical = !s.Vertical
+		}
+		self.Layout = Dirty
 		return r
 	}
 	return KidsMouse(w, self, s.Kids, m, origM, orig)
