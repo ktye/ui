@@ -104,7 +104,7 @@ func (s *Split) Mouse(w *Window, self *Kid, m Mouse, origM Mouse, orig image.Poi
 		r.Consumed = true
 		s.dragging = true
 		return r
-	} else if m.Button == 3 {
+	} else if m.Button == 3 && m.In(gutter) {
 		r.Consumed = true
 		if m.Direction == mouse.DirRelease {
 			s.Vertical = !s.Vertical
