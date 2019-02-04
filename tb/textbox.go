@@ -325,13 +325,15 @@ func (b *TextBox) Tick() bool {
 	return redraw
 }
 
+// ktye: add return value for Move
+
 // Move handles the event of the mouse cursor moving to a point
 // and returns whether the text box image needs to be redrawn.
-func (b *TextBox) Move(pt image.Point) {
+func (b *TextBox) Move(pt image.Point) bool {
 	pt.X -= textPadPx
 	b.pt = pt
 	if b.button <= 0 || b.button >= len(b.dots) || pt.In(b.dragTextBox) {
-		return
+		return false
 	}
 	b.dragAt, b.dragTextBox = atPoint(b, pt)
 	if b.clickAt <= b.dragAt {
@@ -339,6 +341,7 @@ func (b *TextBox) Move(pt image.Point) {
 	} else {
 		setDot(b, b.button, b.dragAt, b.clickAt)
 	}
+	return true
 }
 
 // Wheel handles the event of the mouse wheel rolling

@@ -75,6 +75,7 @@ func (e *Edit) Layout(w *Window, self *Kid, sizeAvail image.Point, force bool) {
 }
 
 func (e *Edit) Draw(w *Window, self *Kid, img draw.Image, orig image.Point, m Mouse, force bool) {
+
 	if e.TextBox == nil {
 		styles := [4]text.Style{
 			text.Style{FG: w.Regular.Normal.Text, BG: w.Regular.Normal.Background.At(0, 0), Face: w.font.Face},
@@ -109,7 +110,7 @@ func (e *Edit) Draw(w *Window, self *Kid, img draw.Image, orig image.Point, m Mo
 }
 
 func (e *Edit) Mouse(w *Window, self *Kid, m Mouse, origM Mouse, orig image.Point) (r Result) {
-	b, dot := e.mouseEvent(m.Event)
+	b, dot, dirty := e.mouseEvent(m.Event)
 
 	// Search on Button-3 release.
 	// If Button-3 marked text, it is used, otherwise the current dot is used.
@@ -133,10 +134,13 @@ func (e *Edit) Mouse(w *Window, self *Kid, m Mouse, origM Mouse, orig image.Poin
 				e.Execute(e, sel)
 			}
 		}
+		dirty = true
 	}
 
 	r.Consumed = true
-	self.Draw = Dirty // Let T decide when to draw. Not sure if that draws too often.
+	if dirty {
+		self.Draw = Dirty
+	}
 	return r
 }
 
@@ -173,8 +177,9 @@ func (e *Edit) Mark(self *Kid, o Widget, forLayout bool) (marked bool) {
 
 // From T.main:
 
-func (edt *Edit) mouseEvent(e mouse.Event) (int, [2]int64) {
+func (edt *Edit) mouseEvent(e mouse.Event) (int, [2]int64, bool) {
 	w := edt.TextBox
+	draw := true
 	switch pt := image.Pt(int(e.X), int(e.Y)); {
 	case e.Button == mouse.ButtonWheelUp:
 		w.Wheel(pt, 0, 1)
@@ -189,19 +194,21 @@ func (edt *Edit) mouseEvent(e mouse.Event) (int, [2]int64) {
 		w.Wheel(pt, 1, 0)
 
 	case e.Direction == mouse.DirNone:
-		w.Move(pt)
+		// Only draw if there was a change.
+		draw = w.Move(pt)
 
 	case e.Direction == mouse.DirPress:
 		w.Click(pt, int(e.Button))
 
 	case e.Direction == mouse.DirRelease:
-		return w.Click(pt, -int(e.Button))
+		b, d := w.Click(pt, -int(e.Button))
+		return b, d, true
 
 	case e.Direction == mouse.DirStep:
 		w.Click(pt, int(e.Button))
 		w.Click(pt, -int(e.Button))
 	}
-	return 0, [2]int64{0, 0}
+	return 0, [2]int64{0, 0}, draw
 }
 
 func (edt *Edit) keyEvent(w *Window, mods [4]bool, e key.Event) [4]bool {
