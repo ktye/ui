@@ -1,6 +1,9 @@
 // Display is the shiny backend of ui.
 package display
 
+// TODO: this has been observed (once)
+// panic: windriver: Buffer.Upload called after Buffer.Release
+
 import (
 	"image"
 	"io"
