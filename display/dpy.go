@@ -33,6 +33,7 @@ type Display struct {
 	screen      screen.Screen
 	window      screen.Window
 	opt         screen.NewWindowOptions
+	sxl         bool
 }
 
 // New returns a new Display.
@@ -74,10 +75,14 @@ func New(opt *screen.NewWindowOptions) *Display {
 }
 
 func (d *Display) Flush() {
-	d.Lock()
-	d.window.Upload(image.Point{}, d.Buffer, d.Buffer.Bounds())
-	d.window.Publish()
-	d.Unlock()
+	if d.sxl {
+		d.flush6()
+	} else {
+		d.Lock()
+		d.window.Upload(image.Point{}, d.Buffer, d.Buffer.Bounds())
+		d.window.Publish()
+		d.Unlock()
+	}
 }
 
 func (d *Display) loop() {
