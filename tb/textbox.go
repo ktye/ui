@@ -361,9 +361,9 @@ func (b *TextBox) Wheel(_ image.Point, x, y int) {
 	b.wheelTime = now.Add(wheelScrollDuration)
 	switch {
 	case y < 0:
-		scrollDown(b, 1)
+		scrollDown(b, 5) // ktye 1→5
 	case y > 0:
-		scrollUp(b, 1)
+		scrollUp(b, 5)
 	}
 }
 
