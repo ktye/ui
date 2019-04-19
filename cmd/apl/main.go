@@ -14,6 +14,7 @@ import (
 func main() {
 	var interp interp
 	repl := &ui.Repl{Reply: true}
+	repl.Edit.Nowrap = true
 	repl.SetText(rope.New("\t"))
 	interp.repl = repl
 	repl.Interp = &interp

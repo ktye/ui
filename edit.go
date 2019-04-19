@@ -90,6 +90,7 @@ func (e *Edit) Draw(w *Window, self *Kid, img draw.Image, orig image.Point, m Mo
 		}
 
 		e.TextBox = tb.NewTextBox(styles, self.R.Size())
+		e.TextBox.SetNowrap(e.Nowrap)
 		if e.text == nil {
 			e.TextBox.SetText(rope.New(""))
 		} else {
@@ -106,7 +107,7 @@ func (e *Edit) Draw(w *Window, self *Kid, img draw.Image, orig image.Point, m Mo
 	rect := self.R.Add(orig).Sub(self.R.Min)
 	//rect.Max = rect.Max.Add(image.Point{1000, 0}) //
 	subimage := img.(*image.RGBA).SubImage(rect)
-	e.TextBox.Draw(true, subimage.(draw.Image), e.Nowrap)
+	e.TextBox.Draw(true, subimage.(draw.Image))
 }
 
 func (e *Edit) Mouse(w *Window, self *Kid, m Mouse, origM Mouse, orig image.Point) (r Result) {

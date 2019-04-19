@@ -65,6 +65,8 @@ type TextBox struct {
 	syntax      []syntax.Highlight  // syntax highlighting
 	highlighter updater             // syntax highlighter
 
+	nowrap bool // ktye
+
 	dirty  bool
 	_lines []line
 	now    func() time.Time
@@ -129,7 +131,7 @@ func (b *TextBox) SetText(text rope.Rope) {
 	dirtyLines(b)
 }
 
-// ktye: added Selection, Dot, Dotn, SetDot, Dot
+// ktye: added Selection, Dot, Dotn, SetDot, Dot, SetNowrap, SetFace
 
 // Selection returns text that is selected with button-1.
 func (b *TextBox) Selection() string {
@@ -152,7 +154,8 @@ func (b *TextBox) SetDot(dot [2]int64) {
 	showAddr(b, dot[0]) // why is this is not triggered by setDot?
 }
 
-// ktye: added SetFace (for changing fontsize), this could also be SetStyle.
+// SetNowrap sets if long lines should be wrapped.
+func (b *TextBox) SetNowrap(x bool) { b.nowrap = x }
 
 // SetFace sets the font face.
 func (b *TextBox) SetFace(f font.Face) {
@@ -762,14 +765,9 @@ func (b *TextBox) Rune(r rune) {
 	setDot(b, 1, b.dots[1].At[1], b.dots[1].At[1])
 }
 
-// ktye: add nowrap
-
 // Draw draws the text box to the image with the upper-left of the box at 0,0.
-func (b *TextBox) Draw(dirty bool, img draw.Image, nowrap bool) {
+func (b *TextBox) Draw(dirty bool, img draw.Image) {
 	size := img.Bounds().Size()
-	if nowrap {
-		size.X = 2048 // Some big value.
-	}
 	if dirty || size != b.size {
 		b.size = size
 		dirtyLines(b)
@@ -834,6 +832,7 @@ func drawLine(b *TextBox, img draw.Image, at int64, y0 fixed.Int26_6, l line) {
 	var prevRune rune
 	x0 := fixed.I(textPadPx)
 	yb, y1 := y0+l.a, y0+l.h
+	maxx := fixed.I(img.Bounds().Max.X) // ktye
 
 	// leading padding
 	pad := image.Rect(0, y0.Floor(), textPadPx, y1.Floor())
@@ -853,7 +852,7 @@ func drawLine(b *TextBox, img draw.Image, at int64, y0 fixed.Int26_6, l line) {
 			var adv fixed.Int26_6
 			if r == '\t' || r == '\n' {
 				adv = advance(b, s.style, x0-fixed.I(textPadPx), r)
-			} else {
+			} else if x0 < maxx { // ktye: don't draw hidden part of wrapped lines
 				adv = drawGlyph(img, s.style, x0, yb, r)
 			}
 			if b.dots[1].At[0] == b.dots[1].At[1] && b.dots[1].At[0] == at {
@@ -1051,14 +1050,18 @@ func dirtyLines(b *TextBox) {
 	b._lines = b._lines[:0]
 }
 
+// ktye: add nowrap
+
 func (b *TextBox) lines() []line {
 	if len(b._lines) == 0 {
-		reset(b)
+		reset(b, b.nowrap)
 	}
 	return b._lines
 }
 
-func reset(b *TextBox) {
+// ktye: add nowrap
+
+func reset(b *TextBox, nowrap bool) {
 	at := b.at
 	rs := bufio.NewReader(
 		rope.NewReader(rope.Slice(b.text, b.at, b.text.Len())),
@@ -1087,7 +1090,7 @@ func reset(b *TextBox) {
 				break
 			}
 			adv := advance(b, style, x, r)
-			if (x + adv).Ceil() >= maxx {
+			if nowrap == false && (x+adv).Ceil() >= maxx {
 				x = fixed.I(maxx)
 				rs.UnreadRune()
 				break
