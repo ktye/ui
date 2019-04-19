@@ -613,7 +613,12 @@ func pageSize(b *TextBox) int {
 	if h == 0 {
 		return 1
 	}
-	return b.size.Y / (4 * h)
+	// ktye: whole screen, instead of b.size.Y / (4 * h)
+	if s := (b.size.Y / h) - 2; s <= 0 {
+		return 1
+	} else {
+		return s
+	}
 }
 
 func leftRight(b *TextBox, dir string) int64 {
@@ -1008,6 +1013,7 @@ func showAddr(b *TextBox, at int64) {
 		panic(err.Error())
 	}
 	b.at = bol[0]
+
 	// TODO: This shows the start of the line containing the addr.
 	// If it's a multi-line text line, then we may need to scroll forward
 	// in order to see the address.
