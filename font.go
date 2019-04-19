@@ -3,10 +3,10 @@ package ui
 import (
 	"image"
 
+	"golang.org/x/image/font/basicfont"
 	imfont "golang.org/x/image/font"
 
 	"github.com/golang/freetype/truetype"
-	af "github.com/ktye/iv/cmd/lui/font"
 )
 
 func (w *Window) FontHeight() int {
@@ -20,7 +20,9 @@ func (w *Window) StringSize(s string) image.Point {
 }
 
 func (w *Window) defaultFont() {
-	w.SetFont(af.APL385(), 18)
+	w.font.ttf = nil
+	w.font.size = 13
+	w.font.Face = basicfont.Face7x13
 }
 
 func (w *Window) SetFont(ttf []byte, size int) {
