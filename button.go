@@ -124,18 +124,6 @@ func (b *Button) Key(w *Window, self *Kid, k key.Event, m Mouse, orig image.Poin
 	return
 }
 
-func (b *Button) FirstFocus(w *Window, self *Kid) *image.Point {
-	p := b.space(w)
-	return &p
-}
-
-func (b *Button) Focus(w *Window, self *Kid, o Widget) *image.Point {
-	if o != b {
-		return nil
-	}
-	return b.FirstFocus(w, self)
-}
-
 func (b *Button) Mark(self *Kid, o Widget, forLayout bool) (marked bool) {
 	return self.Mark(o, forLayout)
 }

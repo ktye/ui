@@ -160,18 +160,6 @@ func (e *Edit) Key(w *Window, self *Kid, k key.Event, m Mouse, orig image.Point)
 	return res
 }
 
-func (e *Edit) FirstFocus(w *Window, self *Kid) (warp *image.Point) {
-	// TODO lastCursorPoint
-	return nil
-}
-
-func (e *Edit) Focus(w *Window, self *Kid, o Widget) (warp *image.Point) {
-	if o != e {
-		return nil
-	}
-	return e.FirstFocus(w, self)
-}
-
 func (e *Edit) Mark(self *Kid, o Widget, forLayout bool) (marked bool) {
 	return self.Mark(o, forLayout)
 }

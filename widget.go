@@ -42,10 +42,6 @@ import (
 // `m` is the mouse location at the time of the key, relative to this UIs zero point.
 // `orig` is the origin location of this UI. If you want to warp the mouse, add the origin to the UI-relative point.
 //
-// FirstFocus returns where the focus should go next when "tab" is hit, if anything.
-//
-// Focus returns the focus-point for `ui`.
-//
 // Mark looks for ui (itself or children), marks it as dirty for layout or draw (forLayout),
 // and propagates whether it marked anything back to the caller.
 type Widget interface {
@@ -53,7 +49,5 @@ type Widget interface {
 	Draw(w *Window, self *Kid, img draw.Image, orig image.Point, m Mouse, force bool)
 	Mouse(w *Window, self *Kid, m Mouse, origM Mouse, orig image.Point) (r Result)
 	Key(w *Window, self *Kid, k key.Event, m Mouse, orig image.Point) (r Result)
-	FirstFocus(w *Window, self *Kid) (warp *image.Point)
-	Focus(w *Window, self *Kid, o Widget) (warp *image.Point)
 	Mark(k *Kid, o Widget, forLayout bool) (marked bool)
 }

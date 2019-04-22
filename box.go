@@ -154,14 +154,6 @@ func (b *Box) orderedKids() []*Kid {
 	return kids
 }
 
-func (b *Box) FirstFocus(w *Window, self *Kid) *image.Point {
-	return KidsFirstFocus(w, self, b.orderedKids())
-}
-
-func (b *Box) Focus(w *Window, self *Kid, o Widget) *image.Point {
-	return KidsFocus(w, self, b.Kids, o)
-}
-
 func (b *Box) Mark(self *Kid, o Widget, forLayout bool) (marked bool) {
 	return KidsMark(self, b.Kids, o, forLayout)
 }

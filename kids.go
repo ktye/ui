@@ -165,25 +165,12 @@ func KidsMouse(w *Window, self *Kid, kids []*Kid, m Mouse, origM Mouse, orig ima
 // KidsKey delivers key event key to the widget at m.
 // Orig is passed so widgets can calculate locations to warp the mouse to.
 func KidsKey(w *Window, self *Kid, kids []*Kid, key key.Event, m Mouse, orig image.Point) (r Result) {
-	for i, k := range kids {
+	for _, k := range kids {
 		if !m.In(k.R) {
 			continue
 		}
 		m = m.Sub(k.R.Min)
 		r = k.W.Key(w, k, key, m, orig.Add(k.R.Min))
-		if !r.Consumed && key.Rune == '\t' { // TODO: direction?
-			for next := i + 1; next < len(kids); next++ {
-				k := kids[next]
-				first := k.W.FirstFocus(w, k)
-				if first != nil {
-					p := first.Add(orig).Add(k.R.Min)
-					r.Warp = &p
-					r.Consumed = true
-					r.Hit = k.W
-					break
-				}
-			}
-		}
 		if r.Hit == nil {
 			r.Hit = self.W
 		}
@@ -191,36 +178,6 @@ func KidsKey(w *Window, self *Kid, kids []*Kid, key key.Event, m Mouse, orig ima
 		return
 	}
 	return Result{}
-}
-
-// KidsFirstFocus delivers the FirstFocus request to the first leaf widget, and returns the location where the mouse should warp to.
-func KidsFirstFocus(w *Window, self *Kid, kids []*Kid) *image.Point {
-	if len(kids) == 0 {
-		return nil
-	}
-	for _, k := range kids {
-		first := k.W.FirstFocus(w, k)
-		if first != nil {
-			p := first.Add(k.R.Min)
-			return &p
-		}
-	}
-	return nil
-}
-
-// KidsFocus delivers the Focus request to the first leaf widget, and returns the location where the mouse should warp to.
-func KidsFocus(w *Window, self *Kid, kids []*Kid, widget Widget) *image.Point {
-	if len(kids) == 0 {
-		return nil
-	}
-	for _, k := range kids {
-		p := k.W.Focus(w, k, widget)
-		if p != nil {
-			pp := p.Add(k.R.Min)
-			return &pp
-		}
-	}
-	return nil
 }
 
 // KidsMark finds o in this UI subtree (self and kids), marks it as needing layout or draw (forLayout false), and returns whether it found and marked the UI.

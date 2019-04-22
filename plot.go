@@ -40,11 +40,4 @@ func (p *Plot) Mouse(w *Window, self *Kid, m Mouse, origM Mouse, orig image.Poin
 	return r
 }
 func (p *Plot) Key(w *Window, self *Kid, k key.Event, m Mouse, orig image.Point) (r Result) { return r }
-func (p *Plot) FirstFocus(w *Window, self *Kid) (warp *image.Point)                         { return nil }
-func (p *Plot) Focus(w *Window, self *Kid, o Widget) (warp *image.Point) {
-	if o != p {
-		return nil
-	}
-	return p.FirstFocus(w, self)
-}
-func (p *Plot) Mark(k *Kid, o Widget, forLayout bool) (marked bool) { return k.Mark(o, forLayout) }
+func (p *Plot) Mark(k *Kid, o Widget, forLayout bool) (marked bool)                         { return k.Mark(o, forLayout) }

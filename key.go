@@ -14,16 +14,6 @@ func (w *Window) Key(k key.Event) {
 	}
 
 	r := w.Top.W.Key(w, &w.Top, k, w.mouse, image.ZP)
-	if !r.Consumed {
-		switch k.Rune {
-		case '\t':
-			first := w.Top.W.FirstFocus(w, &w.Top)
-			if first != nil {
-				r.Warp = first
-				r.Consumed = true
-			}
-		}
-	}
 	w.apply(r)
 }
 

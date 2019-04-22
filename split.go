@@ -119,14 +119,6 @@ func (s *Split) Key(w *Window, self *Kid, k key.Event, m Mouse, orig image.Point
 	return KidsKey(w, self, s.Kids, k, m, orig)
 }
 
-func (s *Split) FirstFocus(w *Window, self *Kid) *image.Point {
-	return KidsFirstFocus(w, self, s.Kids)
-}
-
-func (s *Split) Focus(w *Window, self *Kid, o Widget) *image.Point {
-	return KidsFocus(w, self, s.Kids, o)
-}
-
 func (s *Split) Mark(self *Kid, o Widget, forLayout bool) (marked bool) {
 	return KidsMark(self, s.Kids, o, forLayout)
 }
