@@ -3,8 +3,8 @@ package ui
 import (
 	"image"
 
-	"golang.org/x/image/font/basicfont"
 	imfont "golang.org/x/image/font"
+	"golang.org/x/image/font/basicfont"
 
 	"github.com/golang/freetype/truetype"
 )

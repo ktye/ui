@@ -131,6 +131,10 @@ func (b *TextBox) SetText(text rope.Rope) {
 	dirtyLines(b)
 }
 
+func (b *TextBox) SetHighlighter(h updater) { // ktye
+	b.setHighlighter(h)
+}
+
 // ktye: added Selection, Dot, Dotn, SetDot, Dot, SetNowrap, SetFace
 
 // Selection returns text that is selected with button-1.

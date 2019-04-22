@@ -5,6 +5,8 @@ github.com/eaburns/T v0.0.0-20190217122806-dbc7887ff15c h1:KkBQrE9rvZDvX7bcICJ3j
 github.com/eaburns/T v0.0.0-20190217122806-dbc7887ff15c/go.mod h1:6HzllJGooEeAtNJcTTd8eLXcR+SYVU8uKW3b/ExJvjk=
 github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 h1:DACJavvAHhabrF08vX0COfcOBJRhZ8lUbR+ZWIs0Y5g=
 github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0/go.mod h1:E/TSTwGwJL78qG/PmXZO1EjYhfJinVAhrmmHX6Z8B9k=
+github.com/ktye/T v0.0.0-20190129114522-2df0d9534359 h1:k+X7SJ0G7ahdxSFKJb3Qo5Po8/GUxX3tRMU/38ihQNA=
+github.com/ktye/T v0.0.0-20190129114522-2df0d9534359/go.mod h1:N86GX4U5tSko5073+il6LwDJFCAO6Q7uTcC4sxU3et4=
 github.com/ktye/plot v0.0.0-20190418145510-8e0ab7910c77 h1:6VlwCxwyYkZggqET0dMUTRmo/mmn7lHYDmkhVbiWw94=
 github.com/ktye/plot v0.0.0-20190418145510-8e0ab7910c77/go.mod h1:pCmVLJ22Fj9q6zZ7FutowrJY3N3ZcWKv0e0nObHoIe0=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
