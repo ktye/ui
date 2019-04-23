@@ -64,6 +64,7 @@ type TextBox struct {
 	highlight   []syntax.Highlight  // highlighted words
 	syntax      []syntax.Highlight  // syntax highlighting
 	highlighter updater             // syntax highlighter
+	doubleClick func(tb *TextBox)
 
 	nowrap bool // ktye
 
@@ -133,6 +134,9 @@ func (b *TextBox) SetText(text rope.Rope) {
 
 func (b *TextBox) SetHighlighter(h updater) { // ktye
 	b.setHighlighter(h)
+}
+func (b *TextBox) SetDoubleClick(h func(*TextBox)) { // ktye
+	b.doubleClick = h
 }
 
 // ktye: added Selection, Dot, Dotn, SetDot, Dot, SetNowrap, SetFace
@@ -376,7 +380,6 @@ func (b *TextBox) Wheel(_ image.Point, x, y int) {
 // (this can differ from the argument button, for example,
 // if modifier keys are being held).
 // If the button is < 0, the second return value is the clicked address.
-// The third return value is whether the text box image needs to be redrawn.
 //
 // The absolute value of the argument indicates the mouse button.
 // A positive value indicates the button was pressed.
@@ -421,7 +424,11 @@ func click(b *TextBox, button int) {
 	b.button = button
 	if button == 1 {
 		if b.now().Sub(b.clickTime) < doubleClickDuration {
-			doubleClick(b)
+			if b.doubleClick != nil {
+				b.doubleClick(b)
+			} else {
+				doubleClick(b)
+			}
 			return
 		}
 		b.clickTime = b.now()
@@ -431,6 +438,7 @@ func click(b *TextBox, button int) {
 	if button == 1 {
 		b.cursorCol = -1
 	}
+	return
 }
 
 var delim = [][2]rune{
