@@ -17,13 +17,12 @@ import (
 
 type List struct {
 	Target  **List
-	Execute func()
+	Execute func() bool
 	Quit    func()
 	Delete  func()
 	Single  bool
 	text    rope.Rope
 	*tb.TextBox
-	mods     [4]bool
 	styles   []text.Style
 	sel      map[int]bool
 	fontSize int
@@ -52,7 +51,7 @@ func (l *List) SetText(t rope.Rope) {
 		ln++
 		_, t = rope.Split(t, i+1)
 	}
-	l.line[end] = len(l.line)
+	l.line[end+1] = len(l.line)
 	l.sel = make(map[int]bool)
 	l.addr = make(map[int]int64)
 	for i, k := range l.line {
@@ -149,7 +148,9 @@ func (l *List) Mouse(w *Window, self *Kid, m Mouse, origM Mouse, orig image.Poin
 	}
 	if dbl {
 		if l.Execute != nil {
-			l.Execute()
+			if l.Execute() {
+				dirty = true
+			}
 		}
 	}
 	r.Consumed = true
@@ -170,11 +171,14 @@ func (l *List) Key(w *Window, self *Kid, k key.Event, m Mouse, orig image.Point)
 		self.Draw = Dirty
 		return res
 	}
+	dirty := false
 	if k.Direction == key.DirRelease {
 		switch k.Code {
 		case key.CodeReturnEnter:
 			if l.Execute != nil {
-				l.Execute()
+				if l.Execute() {
+					dirty = true
+				}
 			}
 		case key.CodeSpacebar:
 			d := l.TextBox.Dot()
@@ -193,6 +197,9 @@ func (l *List) Key(w *Window, self *Kid, k key.Event, m Mouse, orig image.Point)
 				l.Delete()
 			}
 		}
+	}
+	if dirty {
+		self.Draw = Dirty
 	}
 	return res
 }

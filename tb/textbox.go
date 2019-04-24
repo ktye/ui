@@ -139,7 +139,15 @@ func (b *TextBox) SetDoubleClick(h func(*TextBox)) { // ktye
 	b.doubleClick = h
 }
 
-// ktye: added Selection, Dot, Dotn, SetDot, Dot, SetNowrap, SetFace
+// ktye: added At, ScrollAt, Selection, Dot, Dotn, SetDot, Dot, SetNowrap, SetFace
+
+// At returns the address of the first rune in the window.
+func (b *TextBox) At() int64 { return b.at }
+
+func (b *TextBox) ScrollAt(a int64) {
+	b.at = a
+	dirtyLines(b)
+}
 
 // Selection returns text that is selected with button-1.
 func (b *TextBox) Selection() string {
@@ -159,7 +167,7 @@ func (b *TextBox) Dotn(n int) [2]int64 {
 // SetDot sets the current selection.
 func (b *TextBox) SetDot(dot [2]int64) {
 	setDot(b, 1, dot[0], dot[1])
-	showAddr(b, dot[0]) // why is this is not triggered by setDot?
+	// showAddr(b, dot[0]) // why is this is not triggered by setDot?
 }
 
 // SetNowrap sets if long lines should be wrapped.
@@ -1029,7 +1037,7 @@ func showAddr(b *TextBox, at int64) {
 	// TODO: This shows the start of the line containing the addr.
 	// If it's a multi-line text line, then we may need to scroll forward
 	// in order to see the address.
-	scrollUp(b, pageSize(b))
+	scrollUp(b, pageSize(b)/2) // ktye: half screen
 	dirtyLines(b)
 }
 

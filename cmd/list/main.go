@@ -11,11 +11,11 @@ import (
 func main() {
 	l := &ui.List{}
 	r := rope.New("")
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 3; i++ {
 		r = rope.Append(r, rope.New(fmt.Sprintf("line %d alpha beta gamma\n", i)))
 	}
 	l.SetText(r)
-	l.Execute = func() { println("exec") }
+	l.Execute = func() bool { println("exec"); return false }
 	l.Delete = func() { println("delete") }
 	l.Quit = func() { os.Exit(0) }
 	l.Single = true
