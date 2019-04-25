@@ -1,4 +1,5 @@
 # ui - go gui toolkit
+Version 1
 
 Ui should be a re-implementation of duit:
 
