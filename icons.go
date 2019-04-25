@@ -1,5 +1,7 @@
 package ui
 
+/* TODO port to v2
+
 import (
 	"image"
 	"image/draw"
@@ -62,6 +64,8 @@ func getIcon(w *Window, id icon) image.Image {
 func unknownIcon(size int) image.Image {
 	return image.NewGray(rect(image.Point{size, size}))
 }
+
+*/
 
 /* List of icons in golang.org/x/exp/shiny/materialdesign/icons
 Action3DRotation

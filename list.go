@@ -1,5 +1,7 @@
 package ui
 
+/* TODO port to v2
+
 import (
 	"image"
 	"image/draw"
@@ -251,3 +253,4 @@ func (l *List) lineNum(at int64) int {
 	}
 	return l.line[start]
 }
+*/

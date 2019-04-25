@@ -1,5 +1,7 @@
 package ui
 
+/* TODO port to v2
+
 import (
 	"image/color"
 	"strings"
@@ -79,3 +81,4 @@ func (sam *Sam) Eval(t string) {
 }
 
 func (sam *Sam) Cancel() {}
+*/

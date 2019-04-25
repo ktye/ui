@@ -1,5 +1,7 @@
 package ui
 
+/* TODO port to v2
+
 import (
 	"image"
 	"image/draw"
@@ -127,3 +129,4 @@ func (b *Button) Key(w *Window, self *Kid, k key.Event, m Mouse, orig image.Poin
 func (b *Button) Mark(self *Kid, o Widget, forLayout bool) (marked bool) {
 	return self.Mark(o, forLayout)
 }
+*/

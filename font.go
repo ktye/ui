@@ -7,6 +7,7 @@ import (
 	"golang.org/x/image/font/basicfont"
 
 	"github.com/golang/freetype/truetype"
+	"github.com/ktye/ui/dpy"
 )
 
 func (w *Window) FontHeight() int {
@@ -48,6 +49,19 @@ type font struct {
 	size int
 }
 
+func (w *Window) mouseScale(m dpy.Mouse) int { // shift-wheel up/down
+	if m.Mod&1 != 0 {
+		if m.But == -1 {
+			w.scale(true)
+			return -1
+		} else if m.But == -2 {
+			w.scale(false)
+			return -1
+		}
+	}
+	return 0
+}
+
 // Scale is the callback for shift-wheel up/down.
 // It changes the font size.
 func (w *Window) scale(up bool) {
@@ -59,7 +73,4 @@ func (w *Window) scale(up bool) {
 		w.font.size--
 	}
 	w.SetFont(w.font.ttf, w.font.size)
-
-	w.Top.Layout = Dirty
-	w.Render()
 }

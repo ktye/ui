@@ -1,5 +1,7 @@
 package ui
 
+/* TODO port to v2
+
 import (
 	"github.com/eaburns/T/rope"
 )
@@ -144,6 +146,7 @@ func (t *Tree) toggle(p plant, k int) bool {
 	t.setText(k)
 	return true
 }
+*/
 
 /*
 type plant struct {

@@ -1,5 +1,5 @@
-// Display is the shiny backend of ui.
-package display
+// Dpy is the shiny backend of ui.
+package dpy
 
 // TODO: this has been observed (once)
 // panic: windriver: Buffer.Upload called after Buffer.Release
@@ -24,9 +24,9 @@ import (
 // Use New to create the display.
 type Display struct {
 	sync.Mutex
-	Mouse       chan mouse.Event
-	Key         chan key.Event
-	Size        chan size.Event
+	Mouse       chan Mouse
+	Key         chan Key
+	Size        chan Size
 	Err         chan error
 	PixelsPerPt float32
 	Buffer      screen.Buffer
@@ -46,9 +46,9 @@ func New(opt *screen.NewWindowOptions) *Display {
 		}
 	}
 	d := &Display{
-		Mouse: make(chan mouse.Event),
-		Key:   make(chan key.Event),
-		Size:  make(chan size.Event),
+		Mouse: make(chan Mouse),
+		Key:   make(chan Key),
+		Size:  make(chan Size),
 		Err:   make(chan error),
 		opt:   *opt,
 	}
@@ -75,14 +75,10 @@ func New(opt *screen.NewWindowOptions) *Display {
 }
 
 func (d *Display) Flush() {
-	if d.sxl {
-		d.flush6()
-	} else {
-		d.Lock()
-		d.window.Upload(image.Point{}, d.Buffer, d.Buffer.Bounds())
-		d.window.Publish()
-		d.Unlock()
-	}
+	d.Lock()
+	d.window.Upload(image.Point{}, d.Buffer, d.Buffer.Bounds())
+	d.window.Publish()
+	d.Unlock()
 }
 
 func (d *Display) loop() {
@@ -104,7 +100,7 @@ func (d *Display) loop() {
 		d.Buffer = b
 		d.PixelsPerPt = e.PixelsPerPt
 		d.Unlock()
-		d.Size <- e
+		d.Size <- Size(image.Point{e.WidthPx, e.HeightPx})
 	}
 
 	// Delay and filter resize events.
@@ -146,10 +142,20 @@ func (d *Display) loop() {
 			resize <- e
 
 		case mouse.Event:
-			d.Mouse <- e
+			d.Mouse <- Mouse{
+				Pos: image.Point{X: int(e.X), Y: int(e.Y)},
+				But: int(e.Button),
+				Dir: int(e.Direction),
+				Mod: uint32(e.Modifiers),
+			}
 
 		case key.Event:
-			d.Key <- e
+			d.Key <- Key{
+				Rune:  e.Rune,
+				Code:  uint32(e.Code),
+				Press: e.Direction == key.DirPress,
+				Mod:   uint32(e.Modifiers),
+			}
 
 		case error:
 			d.Err <- e

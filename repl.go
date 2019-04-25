@@ -1,5 +1,7 @@
 package ui
 
+/* TODO port to v2
+
 import (
 	"image"
 	"image/draw"
@@ -131,3 +133,4 @@ func (r *Repl) reply(s string) {
 	}
 	// If we are on the last line, the error is address not found.
 }
+*/

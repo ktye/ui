@@ -1,5 +1,7 @@
 package ui
 
+/* TODO port to v2
+
 import (
 	"fmt"
 	"image"
@@ -316,3 +318,4 @@ func (edt *Edit) modKey(mods [4]bool, e key.Event) [4]bool {
 	}
 	return mods
 }
+*/

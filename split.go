@@ -1,5 +1,7 @@
 package ui
 
+/* TODO port to v2
+
 import (
 	"image"
 	"image/draw"
@@ -122,3 +124,4 @@ func (s *Split) Key(w *Window, self *Kid, k key.Event, m Mouse, orig image.Point
 func (s *Split) Mark(self *Kid, o Widget, forLayout bool) (marked bool) {
 	return KidsMark(self, s.Kids, o, forLayout)
 }
+*/
