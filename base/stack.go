@@ -1,24 +1,26 @@
-package ui
+package base
 
 import (
 	"image"
 	"image/draw"
+
+	"github.com/ktye/ui"
 )
 
 // NewStack returns a stacked widget container.
 // Widgets can be pushed on top, or the top widget can be removed, which restores
 // the underlying widget.
 // If the esc parameter is set for a pushed widget, it calls pop when the esc key is pressed.
-func NewStack(w Widget) *stack {
-	return &stack{b: []Widget{w}}
+func NewStack(w ui.Widget) *stack {
+	return &stack{b: []ui.Widget{w}}
 }
 
 type stack struct {
-	b []Widget
+	b []ui.Widget
 	e []bool
 }
 
-func (s *stack) Push(w Widget, esc bool) {
+func (s *stack) Push(w ui.Widget, esc bool) {
 	s.b = append(s.b, w)
 	s.e = append(s.e, esc)
 }

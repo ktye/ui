@@ -1,4 +1,4 @@
-package ui
+package base
 
 import (
 	"image"
@@ -42,30 +42,4 @@ func StringSize(s string) image.Point {
 	dx := int(imfont.MeasureString(Font.Face, s)+32) / 64
 	dy := FontHeight()
 	return image.Point{dx, dy}
-}
-
-func mouseScale(but int, mod uint32) int { // shift-wheel up/down
-	if mod&1 != 0 {
-		if but == -1 {
-			scale(true)
-			return -1
-		} else if but == -2 {
-			scale(false)
-			return -1
-		}
-	}
-	return 0
-}
-
-// Scale is the callback for shift-wheel up/down.
-// It changes the font size.
-func scale(up bool) {
-	if up {
-		Font.size++
-	} else if Font.size < 5 {
-		return
-	} else {
-		Font.size--
-	}
-	SetFont(Font.ttf, Font.size)
 }

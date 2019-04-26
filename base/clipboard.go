@@ -1,4 +1,4 @@
-package ui
+package base
 
 import "github.com/eaburns/T/clipboard"
 
