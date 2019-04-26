@@ -7,41 +7,9 @@ import (
 	"golang.org/x/image/font/basicfont"
 
 	"github.com/golang/freetype/truetype"
-	"github.com/ktye/ui/dpy"
 )
 
-func (w *Window) FontHeight() int {
-	return w.font.Face.Metrics().Height.Ceil()
-}
-
-func (w *Window) StringSize(s string) image.Point {
-	dx := int(imfont.MeasureString(w.font.Face, s)+32) / 64
-	dy := w.FontHeight()
-	return image.Point{dx, dy}
-}
-
-func (w *Window) defaultFont() {
-	w.font.ttf = nil
-	w.font.size = 13
-	w.font.Face = basicfont.Face7x13
-}
-
-func (w *Window) SetFont(ttf []byte, size int) {
-	f, err := truetype.Parse(ttf)
-	if err != nil {
-		panic(err)
-	}
-	w.font.ttf = ttf
-	opt := truetype.Options{
-		Size: float64(size),
-		DPI:  float64(w.Display.PixelsPerPt) * 72.0,
-	}
-	if opt.Size == 0 {
-		opt.Size = 18
-	}
-	w.font.size = size
-	w.font.Face = truetype.NewFace(f, &opt)
-}
+var Font = font{ttf: nil, size: 13, Face: basicfont.Face7x13}
 
 type font struct {
 	imfont.Face
@@ -49,13 +17,40 @@ type font struct {
 	size int
 }
 
-func (w *Window) mouseScale(m dpy.Mouse) int { // shift-wheel up/down
-	if m.Mod&1 != 0 {
-		if m.But == -1 {
-			w.scale(true)
+func SetFont(ttf []byte, size int) {
+	f, err := truetype.Parse(ttf)
+	if err != nil {
+		panic(err)
+	}
+	Font.ttf = ttf
+	opt := truetype.Options{
+		Size: float64(size),
+		DPI:  72.0,
+	}
+	if opt.Size == 0 {
+		opt.Size = 18
+	}
+	Font.size = size
+	Font.Face = truetype.NewFace(f, &opt)
+}
+
+func FontHeight() int {
+	return Font.Face.Metrics().Height.Ceil()
+}
+
+func StringSize(s string) image.Point {
+	dx := int(imfont.MeasureString(Font.Face, s)+32) / 64
+	dy := FontHeight()
+	return image.Point{dx, dy}
+}
+
+func mouseScale(but int, mod uint32) int { // shift-wheel up/down
+	if mod&1 != 0 {
+		if but == -1 {
+			scale(true)
 			return -1
-		} else if m.But == -2 {
-			w.scale(false)
+		} else if but == -2 {
+			scale(false)
 			return -1
 		}
 	}
@@ -64,13 +59,13 @@ func (w *Window) mouseScale(m dpy.Mouse) int { // shift-wheel up/down
 
 // Scale is the callback for shift-wheel up/down.
 // It changes the font size.
-func (w *Window) scale(up bool) {
+func scale(up bool) {
 	if up {
-		w.font.size++
-	} else if w.font.size < 5 {
+		Font.size++
+	} else if Font.size < 5 {
 		return
 	} else {
-		w.font.size--
+		Font.size--
 	}
-	w.SetFont(w.font.ttf, w.font.size)
+	SetFont(Font.ttf, Font.size)
 }

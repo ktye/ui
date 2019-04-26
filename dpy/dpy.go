@@ -6,6 +6,7 @@ package dpy
 
 import (
 	"image"
+	"image/draw"
 	"io"
 	"sync"
 	"time"
@@ -24,16 +25,34 @@ import (
 // Use New to create the display.
 type Display struct {
 	sync.Mutex
-	Mouse       chan Mouse
-	Key         chan Key
-	Size        chan Size
-	Err         chan error
+	mouse       chan mt
+	key         chan kt
+	image       chan draw.Image
+	err         chan error
 	PixelsPerPt float32
 	Buffer      screen.Buffer
 	screen      screen.Screen
 	window      screen.Window
 	opt         screen.NewWindowOptions
 	sxl         bool
+}
+
+func (d *Display) Image() chan draw.Image { return d.image }
+func (d *Display) Mouse() chan mt         { return d.mouse }
+func (d *Display) Key() chan kt           { return d.key }
+func (d *Display) Err() chan error        { return d.err }
+
+type mt = struct {
+	Pos image.Point
+	But int
+	Dir int
+	Mod uint32
+}
+type kt = struct {
+	Rune  rune
+	Code  uint32
+	Press bool
+	Mod   uint32
 }
 
 // New returns a new Display.
@@ -46,17 +65,17 @@ func New(opt *screen.NewWindowOptions) *Display {
 		}
 	}
 	d := &Display{
-		Mouse: make(chan Mouse),
-		Key:   make(chan Key),
-		Size:  make(chan Size),
-		Err:   make(chan error),
+		mouse: make(chan mt),
+		key:   make(chan kt),
+		image: make(chan draw.Image),
+		err:   make(chan error),
 		opt:   *opt,
 	}
 	go driver.Main(func(s screen.Screen) {
 		d.screen = s
 		w, err := s.NewWindow(opt)
 		if err != nil {
-			d.Err <- err
+			d.err <- err
 			return
 		}
 		d.window = w
@@ -93,14 +112,14 @@ func (d *Display) loop() {
 		}
 		b, err = d.screen.NewBuffer(e.Size())
 		if err != nil {
-			d.Err <- err
+			d.err <- err
 			d.Unlock()
 			return
 		}
 		d.Buffer = b
 		d.PixelsPerPt = e.PixelsPerPt
 		d.Unlock()
-		d.Size <- Size(image.Point{e.WidthPx, e.HeightPx})
+		d.image <- b.RGBA()
 	}
 
 	// Delay and filter resize events.
@@ -124,7 +143,7 @@ func (d *Display) loop() {
 		switch e := w.NextEvent().(type) {
 		case lifecycle.Event:
 			if e.To == lifecycle.StageDead {
-				d.Err <- io.EOF
+				d.err <- io.EOF
 				return
 			}
 
@@ -142,7 +161,7 @@ func (d *Display) loop() {
 			resize <- e
 
 		case mouse.Event:
-			d.Mouse <- Mouse{
+			d.mouse <- mt{
 				Pos: image.Point{X: int(e.X), Y: int(e.Y)},
 				But: int(e.Button),
 				Dir: int(e.Direction),
@@ -150,7 +169,7 @@ func (d *Display) loop() {
 			}
 
 		case key.Event:
-			d.Key <- Key{
+			d.key <- kt{
 				Rune:  e.Rune,
 				Code:  uint32(e.Code),
 				Press: e.Direction == key.DirPress,
@@ -158,7 +177,7 @@ func (d *Display) loop() {
 			}
 
 		case error:
-			d.Err <- e
+			d.err <- e
 		}
 	}
 }

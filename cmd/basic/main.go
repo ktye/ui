@@ -6,12 +6,13 @@ import (
 	"image/draw"
 
 	"github.com/ktye/ui"
+	"github.com/ktye/ui/dpy"
 )
 
 var win *ui.Window
 
 func main() {
-	win = ui.New(nil)
+	win = ui.New(dpy.New(nil))
 	win.Top = &basic{}
 	done := win.Run()
 	<-done

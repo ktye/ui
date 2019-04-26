@@ -1,10 +1,5 @@
 package ui
 
-import (
-	"image"
-	"image/draw"
-)
-
 // Widget is a part of the user interface.
 // It can be implemented in an external package without depending on package ui.
 //
@@ -16,8 +11,3 @@ import (
 // ui should be redrawn.
 //
 // Key is send for a key press or release.
-type Widget interface {
-	Draw(dst draw.Image, force bool)
-	Mouse(pos image.Point, but int, dir int, mod uint32) int
-	Key(r rune, code uint32, press bool, mod uint32) int
-}
