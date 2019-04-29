@@ -6,19 +6,19 @@ import (
 )
 
 type List struct {
+	Base
 	Target    **List
-	Menu      *Menu
 	Execute   func() int // double-click or Enter callback
 	Delete    func() int // callback for del key
 	List      []Stringer // list entries
-	Colorsets []Colorset // custom colorsets
-	Colors    []int      // index into Colorsets (#List), based-1
+	Colorsets []Colorset // custom colorsets, list entries may have a Color() int method
 	Sel       []bool     // #List
 	Single    bool       // single selection
 
-	top, cur int
-	draw     bool
-	pagesize int // number of visible lines
+	top, cur  int
+	pagesize  int // number of visible lines
+	clickLine int
+	drag      bool
 }
 
 func (l *List) SetList(x []string) {
@@ -63,8 +63,10 @@ func (l *List) Draw(dst *image.RGBA, force bool) {
 		case l.Sel[i]:
 			Colors = ListSelect
 		default:
-			if i < len(l.Colors) && l.Colors[i] != 0 {
-				Colors = l.Colorsets[l.Colors[i]-1]
+			if cr, ok := l.List[i].(colored); ok {
+				if c := cr.Color() - 1; c >= 0 && c < len(l.Colorsets) {
+					Colors = l.Colorsets[c]
+				}
 			}
 		}
 		if Colors[1] != save[0] {
@@ -82,24 +84,64 @@ func (l *List) Draw(dst *image.RGBA, force bool) {
 	}
 }
 func (l *List) Mouse(pos image.Point, but int, dir int, mod uint32) int {
-	if but != 0 {
-		println("mouse", but, dir)
-	}
-	if but == -1 {
+	switch but {
+	case 0: // move; also if a button is down
+		if l.clickLine == 0 {
+			return 0
+		}
+		if n := 1 + l.top + pos.Y/Font.size - l.clickLine; n != 0 && dir == 0 {
+			l.drag = true
+			if mod&1 != 0 { // but1+shift+move  toggle
+				l.toggleNext(n)
+				l.clickLine += n
+				return l.DrawSelf()
+			} else { // but1+move → scroll
+				l.top -= n
+				return l.setcur()
+			}
+		}
+	case 1:
+		if dir > 0 { // drag start line number + 1
+			l.clickLine = 1 + l.top + pos.Y/Font.size
+			if mod&1 != 0 { // but1+shift → toggle start
+				if n := l.clickLine - 1; n >= 0 && n < len(l.List) {
+					l.cur = n
+					l.toggle()
+				}
+			}
+		} else if dir < 0 && l.drag == false { // but1 release (non-drag) → toggle
+			if n := l.top + pos.Y/Font.size; n+1 == l.clickLine {
+				if n >= 0 && n < len(l.List) {
+					l.cur = n
+					l.toggle()
+				}
+			}
+			l.clickLine = 0
+		} else if dir < 0 && l.drag {
+			l.clickLine = 0
+		}
+		l.drag = false
+		return l.DrawSelf()
+	case -1:
 		l.top -= 5
 		return l.setcur()
-	} else if but == -2 {
+	case -2:
 		l.top += 5
 		return l.setcur()
-	} else if but == 3 && dir == 2 { // right-click or long-press: menu
-		if l.Menu != nil {
-			return l.Menu.Show()
+	case 3:
+		if dir > 0 {
+			if mod&1 != 0 { // shift+right-click → unselect all
+				l.Sel = make([]bool, len(l.List))
+				return l.DrawSelf()
+			} else if l.Menu != nil { // right-click or long-press → menu
+				return l.Menu.Show()
+			}
 		}
 	}
 	return 0
 }
 func (l *List) Key(r rune, code uint32, dir int, mod uint32) int {
-	println("key", code, dir, r)
+	//println("key", code, dir, r)
 	if len(l.List) == 0 {
 		return 0
 	}
@@ -118,27 +160,47 @@ func (l *List) Key(r rune, code uint32, dir int, mod uint32) int {
 			l.cur--
 			return l.setview()
 		case 75: // ↑↑
-			l.cur -= l.pagesize - 1
+			if mod&1 != 0 {
+				l.toggleNext(-l.pagesize - 1)
+			} else {
+				l.cur -= l.pagesize - 1
+			}
 			return l.setview()
 		case 78: // ↓↓
-			l.cur += l.pagesize - 1
+			if mod&1 != 0 {
+				l.toggleNext(l.pagesize - 1)
+			} else {
+				l.cur += l.pagesize - 1
+			}
 			return l.setview()
 		case 74: // ↑↑↑
+			if mod&1 != 0 && l.cur > 0 {
+				for l.cur > 0 {
+					l.cur--
+					l.toggle()
+				}
+			}
 			l.cur = 0
 			return l.setview()
 		case 77: // ↓↓↓
+			if mod&1 != 0 && l.cur < len(l.List)-1 {
+				for l.cur < len(l.List)-1 {
+					l.cur++
+					l.toggle()
+				}
+			}
 			l.cur = len(l.List) - 1
 			return l.setview()
 		case 40, 44: // space, enter
 			l.toggle()
-			return l.drawself()
+			return l.DrawSelf()
 		case 4: // a
 			if mod&2 != 0 { // cntrl-a
 				if l.Single == false {
 					for i := range l.Sel {
 						l.Sel[i] = true
 					}
-					return l.drawself()
+					return l.DrawSelf()
 				}
 			}
 		}
@@ -158,7 +220,7 @@ func (l *List) setview() int { // set view after changing cur
 	if l.cur >= l.top+l.pagesize {
 		l.top = l.cur - l.pagesize + 1
 	}
-	return l.drawself()
+	return l.DrawSelf()
 }
 func (l *List) setcur() int { // set cur after changing top
 	if l.top >= len(l.List) {
@@ -172,7 +234,7 @@ func (l *List) setcur() int { // set cur after changing top
 	} else if l.cur >= l.top+l.pagesize {
 		l.cur = l.top + l.pagesize - 1
 	}
-	return l.drawself()
+	return l.DrawSelf()
 }
 
 func (l *List) toggle() {
@@ -185,11 +247,25 @@ func (l *List) toggle() {
 		l.Sel[l.cur] = !l.Sel[l.cur]
 	}
 }
-func (l *List) drawself() int {
-	l.draw = true
-	return 1
+func (l *List) toggleNext(n int) {
+	dec := false
+	if n < 0 {
+		dec = true
+		n = -n
+	}
+	for i := 0; i < n; i++ {
+		c := l.cur + 1
+		if dec {
+			c = l.cur - 1
+		}
+		if c >= 0 && c < len(l.List) {
+			l.cur = c
+			l.toggle()
+		}
+	}
 }
 
+type colored interface{ Color() int }
 type Stringer interface {
 	String() string
 }
