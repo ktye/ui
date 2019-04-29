@@ -6,7 +6,6 @@ package dpy
 
 import (
 	"image"
-	"image/draw"
 	"io"
 	"sync"
 	"time"
@@ -27,7 +26,7 @@ type Display struct {
 	sync.Mutex
 	mouse       chan mt
 	key         chan kt
-	image       chan draw.Image
+	image       chan *image.RGBA
 	err         chan error
 	PixelsPerPt float32
 	Buffer      screen.Buffer
@@ -37,10 +36,10 @@ type Display struct {
 	sxl         bool
 }
 
-func (d *Display) Image() chan draw.Image { return d.image }
-func (d *Display) Mouse() chan mt         { return d.mouse }
-func (d *Display) Key() chan kt           { return d.key }
-func (d *Display) Err() chan error        { return d.err }
+func (d *Display) Image() chan *image.RGBA { return d.image }
+func (d *Display) Mouse() chan mt          { return d.mouse }
+func (d *Display) Key() chan kt            { return d.key }
+func (d *Display) Err() chan error         { return d.err }
 
 type mt = struct {
 	Pos image.Point
@@ -49,10 +48,10 @@ type mt = struct {
 	Mod uint32
 }
 type kt = struct {
-	Rune  rune
-	Code  uint32
-	Press bool
-	Mod   uint32
+	Rune rune
+	Code uint32
+	Dir  int
+	Mod  uint32
 }
 
 // New returns a new Display.
@@ -67,7 +66,7 @@ func New(opt *screen.NewWindowOptions) *Display {
 	d := &Display{
 		mouse: make(chan mt),
 		key:   make(chan kt),
-		image: make(chan draw.Image),
+		image: make(chan *image.RGBA),
 		err:   make(chan error),
 		opt:   *opt,
 	}
@@ -161,19 +160,27 @@ func (d *Display) loop() {
 			resize <- e
 
 		case mouse.Event:
+			dir := int(e.Direction)
+			if e.Direction == mouse.DirRelease {
+				dir = -1
+			}
 			d.mouse <- mt{
 				Pos: image.Point{X: int(e.X), Y: int(e.Y)},
 				But: int(e.Button),
-				Dir: int(e.Direction),
+				Dir: dir,
 				Mod: uint32(e.Modifiers),
 			}
 
 		case key.Event:
+			dir := int(e.Direction)
+			if e.Direction == key.DirRelease {
+				dir = -1
+			}
 			d.key <- kt{
-				Rune:  e.Rune,
-				Code:  uint32(e.Code),
-				Press: e.Direction == key.DirPress,
-				Mod:   uint32(e.Modifiers),
+				Rune: e.Rune,
+				Code: uint32(e.Code),
+				Dir:  dir,
+				Mod:  uint32(e.Modifiers),
 			}
 
 		case error:

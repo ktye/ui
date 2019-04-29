@@ -2,7 +2,6 @@ package base
 
 import (
 	"image"
-	"image/draw"
 
 	"github.com/ktye/ui"
 )
@@ -30,16 +29,16 @@ func (s *stack) Pop() {
 		s.e = s.e[:len(s.e)-1]
 	}
 }
-func (s *stack) Draw(dst draw.Image, force bool) {
+func (s *stack) Draw(dst *image.RGBA, force bool) {
 	s.b[len(s.b)-1].Draw(dst, force)
 }
 func (s *stack) Mouse(pos image.Point, but int, dir int, mod uint32) int {
 	return s.b[len(s.b)-1].Mouse(pos, but, dir, mod)
 }
-func (s *stack) Key(r rune, code uint32, press bool, mod uint32) int {
-	if s.e[len(s.e)-1] && code == 41 && press == false {
+func (s *stack) Key(r rune, code uint32, dir int, mod uint32) int {
+	if s.e[len(s.e)-1] && code == 41 && dir < 0 {
 		s.Pop()
 		return -1
 	}
-	return s.b[len(s.b)-1].Key(r, code, press, mod)
+	return s.b[len(s.b)-1].Key(r, code, dir, mod)
 }

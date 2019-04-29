@@ -1,256 +1,198 @@
 package base
 
-/* TODO port to v2
-
 import (
 	"image"
 	"image/draw"
-	"sort"
-	"time"
-
-	"github.com/eaburns/T/edit"
-	"github.com/eaburns/T/rope"
-	"github.com/eaburns/T/syntax"
-	"github.com/eaburns/T/text"
-	"github.com/ktye/ui/tb"
-	"golang.org/x/mobile/event/key"
-	"golang.org/x/mobile/event/mouse"
 )
 
 type List struct {
-	Target  **List
-	Execute func() bool
-	Quit    func()
-	Delete  func()
-	Single  bool
-	text    rope.Rope
-	*tb.TextBox
-	styles   []text.Style
-	sel      map[int]bool
-	fontSize int
-	line     map[int64]int
-	addr     map[int]int64
-	ct       time.Time
+	Target    **List
+	Menu      *Menu
+	Execute   func() int // double-click or Enter callback
+	Delete    func() int // callback for del key
+	List      []Stringer // list entries
+	Colorsets []Colorset // custom colorsets
+	Colors    []int      // index into Colorsets (#List), based-1
+	Sel       []bool     // #List
+	Single    bool       // single selection
+
+	top, cur int
+	draw     bool
+	pagesize int // number of visible lines
 }
 
-func (l *List) SetText(t rope.Rope) {
-	l.text = t
-	if l.TextBox != nil {
-		l.TextBox.SetText(l.text)
-	}
-	l.line = make(map[int64]int)
-	l.line[0] = 0
-	end := t.Len()
-	var sum int64 = 0
-	ln := 1
-	for {
-		i := rope.IndexRune(t, '\n')
-		if i < 0 {
-			break
-		}
-		sum += i + 1
-		l.line[sum] = ln
-		ln++
-		_, t = rope.Split(t, i+1)
-	}
-	l.line[end+1] = len(l.line)
-	l.sel = make(map[int]bool)
-	l.addr = make(map[int]int64)
-	for i, k := range l.line {
-		l.addr[k] = i
+func (l *List) SetList(x []string) {
+	l.List = make([]Stringer, len(x))
+	for i := range x {
+		l.List[i] = str(x[i])
 	}
 }
-
-func (l *List) Selection() []int {
-	var sel []int
-	for i, o := range l.sel {
-		if o {
-			sel = append(sel, i)
-		} else {
-			delete(l.sel, i)
+func (l *List) Selection() (r []int) {
+	for i, s := range l.Sel {
+		if s {
+			r = append(r, i)
 		}
 	}
-	if len(sel) > 0 {
-		sort.Ints(sel)
-	}
-	return sel
+	return
 }
 
-func (l *List) toggle(n int) {
-	if l.sel[n] {
-		delete(l.sel, n)
-	} else if l.Single {
-		if len(l.sel) > 0 {
-			l.sel = make(map[int]bool)
-		}
-		l.sel[n] = true
-	} else {
-		l.sel[n] = true
-	}
-}
-
-func (l *List) Update(h []syntax.Highlight, d edit.Diffs, t rope.Rope) []syntax.Highlight {
-	sel := l.Selection()
-	hi := make([]syntax.Highlight, len(sel))
-	for i, n := range sel {
-		hi[i].At[0] = l.addr[n]
-		hi[i].At[1] = l.addr[n+1]
-		hi[i].Style = l.styles[1]
-	}
-	return hi
-}
-
-func (l *List) Layout(w *Window, self *Kid, sizeAvail image.Point, force bool) {
-	self.R = rect(sizeAvail)
+func (l *List) Draw(dst *image.RGBA, force bool) {
 	if l.Target != nil {
 		*l.Target = l
 	}
-}
-
-func (l *List) Draw(w *Window, self *Kid, img draw.Image, orig image.Point, m Mouse, force bool) {
-	if l.TextBox == nil {
-		styles := [4]text.Style{
-			text.Style{FG: w.Regular.Normal.Text, BG: w.Regular.Normal.Background.At(0, 0), Face: w.font.Face},
-			text.Style{FG: w.Primary.Normal.Text, BG: w.Primary.Normal.Background.At(0, 0), Face: w.font.Face},
-			text.Style{FG: w.Primary.Normal.Text, BG: w.Primary.Normal.Background.At(0, 0), Face: w.font.Face},
-			text.Style{FG: w.Primary.Normal.Text, BG: w.Primary.Normal.Background.At(0, 0), Face: w.font.Face},
-		}
-		l.styles = styles[:]
-		l.TextBox = tb.NewTextBox(styles, self.R.Size())
-		l.TextBox.SetNowrap(true)
-		if l.text == nil {
-			l.SetText(rope.New(""))
-		} else {
-			l.SetText(l.text)
-		}
-		l.SetHighlighter(l)
-		l.TextBox.SetDoubleClick(func(x *tb.TextBox) {}) // ignore
+	if force == false && l.draw == false {
+		return
 	}
-	if w.font.size != l.fontSize {
-		l.TextBox.SetFace(w.font.Face)
-		l.fontSize = w.font.size
+	if len(l.List) > 0 && len(l.Sel) != len(l.List) {
+		l.Sel = make([]bool, len(l.List))
 	}
-
-	rect := self.R.Add(orig).Sub(self.R.Min)
-	subimage := img.(*image.RGBA).SubImage(rect)
-	l.TextBox.Draw(true, subimage.(draw.Image))
-}
-
-func (l *List) Mouse(w *Window, self *Kid, m Mouse, origM Mouse, orig image.Point) (r Result) {
-	dot, dirty, sel, dbl := l.mouseEvent(m.Event)
-	if sel {
-		start := l.lineNum(dot[0])
-		end := l.lineNum(dot[1])
-		for i := start; i <= end; i++ {
-			l.toggle(i)
-		}
-		dot[0] = dot[1]
-		l.SetDot(dot)
-		l.SetHighlighter(l)
-	}
-	if dbl {
-		if l.Execute != nil {
-			if l.Execute() {
-				dirty = true
+	save := Colors
+	defer func() {
+		Colors = save
+	}()
+	clear(dst)
+	p, max := image.Point{}, dst.Bounds().Dy()
+	l.pagesize = max / Font.size
+	l.setview() // bring current into view after resize
+	for i := l.top; i < len(l.List); i++ {
+		switch {
+		case i == l.cur && l.Sel[i]:
+			Colors = ListCurSel
+		case i == l.cur:
+			Colors = ListCurCol
+		case l.Sel[i]:
+			Colors = ListSelect
+		default:
+			if i < len(l.Colors) && l.Colors[i] != 0 {
+				Colors = l.Colorsets[l.Colors[i]-1]
 			}
 		}
-	}
-	r.Consumed = true
-	if dirty {
-		self.Draw = Dirty
-	}
-	return r
-}
-
-func (l *List) Key(w *Window, self *Kid, k key.Event, m Mouse, orig image.Point) (res Result) {
-	res.Consumed = true
-	if k.Direction == key.DirNone {
-		k.Direction = key.DirPress
-	}
-	if k.Direction == key.DirPress && dirKeyCode[k.Code] {
-		e := &Edit{TextBox: l.TextBox}
-		e.dirKey(k)
-		self.Draw = Dirty
-		return res
-	}
-	dirty := false
-	if k.Direction == key.DirRelease {
-		switch k.Code {
-		case key.CodeReturnEnter:
-			if l.Execute != nil {
-				if l.Execute() {
-					dirty = true
-				}
-			}
-		case key.CodeSpacebar:
-			d := l.TextBox.Dot()
-			n := l.lineNum(d[0])
-			l.toggle(n)
-			l.SetHighlighter(l)
-			self.Draw = Dirty
-			return res
-
-		case key.CodeEscape:
-			if l.Quit != nil {
-				l.Quit()
-			}
-		case key.CodeDeleteForward, key.CodeDeleteBackspace:
-			if l.Delete != nil {
-				l.Delete()
-			}
+		if Colors[1] != save[0] {
+			r := image.Rectangle{Min: dst.Rect.Min.Add(p), Max: dst.Rect.Max}
+			r.Max.Y = r.Min.Y + Font.size
+			draw.Draw(dst, r, Colors[1], image.ZP, draw.Src)
+		}
+		s := l.List[i].String()
+		String(dst, p, s)
+		Colors = save
+		p.Y += Font.size
+		if i-l.top == l.pagesize-1 {
+			break
 		}
 	}
-	if dirty {
-		self.Draw = Dirty
+}
+func (l *List) Mouse(pos image.Point, but int, dir int, mod uint32) int {
+	if but != 0 {
+		println("mouse", but, dir)
 	}
-	return res
-}
-func (l *List) Mark(self *Kid, o Widget, forLayout bool) (marked bool) {
-	return self.Mark(o, forLayout)
-}
-
-func (l *List) mouseEvent(e mouse.Event) (d [2]int64, dirty, sel, dbl bool) {
-	w := l.TextBox
-	switch pt := image.Pt(int(e.X), int(e.Y)); {
-	case e.Button == mouse.ButtonWheelUp:
-		w.Wheel(pt, 0, 1)
-		dirty = true
-	case e.Button == mouse.ButtonWheelDown:
-		w.Wheel(pt, 0, -1)
-		dirty = true
-	case e.Direction == mouse.DirPress:
-		w.Click(pt, int(e.Button))
-		dirty = true
-	case e.Direction == mouse.DirRelease:
-		_, d = w.Click(pt, -int(e.Button))
-		if e.Button == 1 {
-			dirty, sel = true, true
-			if time.Now().Sub(l.ct) < 500*time.Millisecond {
-				dbl = true
-			}
-			l.ct = time.Now()
-		} else if e.Button == 3 {
-			l.sel = make(map[int]bool)
-			l.SetHighlighter(l)
-			dirty = true
+	if but == -1 {
+		l.top -= 5
+		return l.setcur()
+	} else if but == -2 {
+		l.top += 5
+		return l.setcur()
+	} else if but == 3 && dir == 2 { // right-click or long-press: menu
+		if l.Menu != nil {
+			return l.Menu.Show()
 		}
-	case e.Direction == mouse.DirNone:
-		dirty = w.Move(pt)
 	}
-	return d, dirty, sel, dbl
+	return 0
 }
-
-func (l *List) lineNum(at int64) int {
-	if l.text == nil {
+func (l *List) Key(r rune, code uint32, dir int, mod uint32) int {
+	println("key", code, dir, r)
+	if len(l.List) == 0 {
 		return 0
 	}
-	front, _ := rope.Split(l.text, at)
-	start := rope.LastIndexFunc(front, func(r rune) bool { return r == '\n' })
-	if start < 0 {
-		start = 0
-	} else {
-		start++ // Don't include the \n.
+	if dir >= 0 {
+		switch code {
+		case 81: // ↓
+			if mod&1 != 0 {
+				l.toggle()
+			}
+			l.cur++
+			return l.setview()
+		case 82: // ↑
+			if mod&1 != 0 {
+				l.toggle()
+			}
+			l.cur--
+			return l.setview()
+		case 75: // ↑↑
+			l.cur -= l.pagesize - 1
+			return l.setview()
+		case 78: // ↓↓
+			l.cur += l.pagesize - 1
+			return l.setview()
+		case 74: // ↑↑↑
+			l.cur = 0
+			return l.setview()
+		case 77: // ↓↓↓
+			l.cur = len(l.List) - 1
+			return l.setview()
+		case 40, 44: // space, enter
+			l.toggle()
+			return l.drawself()
+		case 4: // a
+			if mod&2 != 0 { // cntrl-a
+				if l.Single == false {
+					for i := range l.Sel {
+						l.Sel[i] = true
+					}
+					return l.drawself()
+				}
+			}
+		}
 	}
-	return l.line[start]
+	return 0
 }
-*/
+func (l *List) setview() int { // set view after changing cur
+	if l.cur >= len(l.List) {
+		l.cur = len(l.List) - 1
+	}
+	if l.cur < 0 {
+		l.cur = 0
+	}
+	if l.cur < l.top {
+		l.top = l.cur
+	}
+	if l.cur >= l.top+l.pagesize {
+		l.top = l.cur - l.pagesize + 1
+	}
+	return l.drawself()
+}
+func (l *List) setcur() int { // set cur after changing top
+	if l.top >= len(l.List) {
+		l.top = len(l.List) - 1
+	}
+	if l.top < 0 {
+		l.top = 0
+	}
+	if l.cur < l.top {
+		l.cur = l.top
+	} else if l.cur >= l.top+l.pagesize {
+		l.cur = l.top + l.pagesize - 1
+	}
+	return l.drawself()
+}
+
+func (l *List) toggle() {
+	if l.cur < len(l.Sel) {
+		if l.Single && l.Sel[l.cur] == false {
+			l.Sel = make([]bool, len(l.List))
+			l.Sel[l.cur] = true
+			return
+		}
+		l.Sel[l.cur] = !l.Sel[l.cur]
+	}
+}
+func (l *List) drawself() int {
+	l.draw = true
+	return 1
+}
+
+type Stringer interface {
+	String() string
+}
+type str string
+
+func (s str) String() string { return string(s) }

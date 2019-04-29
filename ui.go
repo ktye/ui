@@ -3,7 +3,6 @@ package ui
 
 import (
 	"image"
-	"image/draw"
 	"io"
 )
 
@@ -25,14 +24,14 @@ type Window struct {
 	Top   Widget
 	Quit  chan bool
 	Call  chan func() int
-	image <-chan draw.Image
+	image <-chan *image.RGBA
 	mouse <-chan mt
 	key   <-chan kt
 	err   <-chan error
-	dst   draw.Image
+	dst   *image.RGBA
 }
 type Display interface {
-	Image() chan draw.Image // Resize
+	Image() chan *image.RGBA
 	Mouse() chan mt
 	Key() chan kt
 	Err() chan error
@@ -41,9 +40,9 @@ type Display interface {
 	Unlock()
 }
 type Widget interface {
-	Draw(dst draw.Image, force bool)
+	Draw(dst *image.RGBA, force bool)
 	Mouse(pos image.Point, but int, dir int, mod uint32) int
-	Key(r rune, code uint32, press bool, mod uint32) int
+	Key(r rune, code uint32, dir int, mod uint32) int
 }
 
 func (w *Window) Run() chan bool {
@@ -56,7 +55,7 @@ func (w *Window) Run() chan bool {
 			case m := <-w.mouse:
 				draw = w.Top.Mouse(m.Pos, m.But, m.Dir, m.Mod)
 			case k := <-w.key:
-				draw = w.Top.Key(k.Rune, k.Code, k.Press, k.Mod)
+				draw = w.Top.Key(k.Rune, k.Code, k.Dir, k.Mod)
 			case w.dst = <-w.image:
 				draw = -1
 			case e := <-w.err:
@@ -88,12 +87,12 @@ func (w *Window) Draw(force bool) {
 type mt = struct {
 	Pos image.Point
 	But int    // 0(none),   1(left),    2(middle), 3(right), -1(wheel up), -2(wheel down)
-	Dir int    // 1(press), -1(release), 0(motion)
-	Mod uint32 // 1(shift),  2(cntrl),   4(alt),    8(meta)
+	Dir int    // 0(motion)  1(press),  -1(release) 3(step,both)
+	Mod uint32 // 1(shift),  2(cntrl),   4(alt),    8(meta) (bitmask)
 }
 type kt = struct {
-	Rune  rune
-	Code  uint32
-	Press bool
-	Mod   uint32
+	Rune rune
+	Code uint32 // see golang.org/x/mobile/event/key/key.go
+	Dir  int    // 0(hold),  1(press), -1(release)
+	Mod  uint32 // 1(shift), 2(cntrl),  4(alt),    8(meta) (bitmask)
 }

@@ -2,7 +2,6 @@ package base
 
 import (
 	"image"
-	"image/draw"
 
 	"github.com/ktye/ui"
 )
@@ -13,7 +12,7 @@ type Scale struct {
 	ui.Widget
 }
 
-func (s Scale) Draw(dst draw.Image, force bool) {
+func (s Scale) Draw(dst *image.RGBA, force bool) {
 	s.Widget.Draw(dst, force)
 }
 func (s Scale) Mouse(pos image.Point, but int, dir int, mod uint32) int {
@@ -28,8 +27,8 @@ func (s Scale) Mouse(pos image.Point, but int, dir int, mod uint32) int {
 	}
 	return s.Widget.Mouse(pos, but, dir, mod)
 }
-func (s Scale) Key(r rune, code uint32, press bool, mod uint32) int {
-	return s.Widget.Key(r, code, press, mod)
+func (s Scale) Key(r rune, code uint32, dir int, mod uint32) int {
+	return s.Widget.Key(r, code, dir, mod)
 }
 
 // Scale is the callback for shift-wheel up/down.

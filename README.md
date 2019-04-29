@@ -5,7 +5,7 @@
 type Widget interface {
 	Draw(dst draw.Image, force bool)
 	Mouse(pos image.Point, but int, dir int, mod uint32) int
-	Key(r rune, code uint32, press bool, mod uint32) int
+	Key(r rune, code uint32, dir int, mod uint32) int
 }
 ```
 
@@ -24,7 +24,7 @@ import (
 var win *ui.Window
 
 func main() {
-	win = ui.New(nil)
+	win = ui.New(dpy.New(nil))
 	win.Top = &basic{}
 	done := win.Run()
 	<-done
@@ -46,7 +46,7 @@ func (b *basic) Mouse(pos image.Point, but int, dir int, mod uint32) int {
 	}
 	return 0
 }
-func (b *basic) Key(r rune, code uint32, press bool, mod uint32) int {
+func (b *basic) Key(r rune, code uint32, dir int, mod uint32) int {
 	println("key", code)
 	if code == 41 { // ESC
 		go func() { win.Quit <- true }()
