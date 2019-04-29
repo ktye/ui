@@ -21,6 +21,7 @@
 // Mouse is sent for a mouse event.
 // The return value is 0 if it is ignored, >0 if the widget wants to redraw and <0 if the complete
 // ui should be redrawn.
+// The mouse position is in absolute coordinates.
 //
 // For Key rune, code, mod and Mouse, see golang.org/x/mobile/event/{key,mouse}
 // Mouse,Key dir is 0(hold,motion) 1(press), -1(release), 3(wheel).

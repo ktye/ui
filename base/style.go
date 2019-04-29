@@ -76,6 +76,7 @@ var Colors Colorset = [2]*image.Uniform{&image.Uniform{color.Black}, &image.Unif
 var ListCurCol Colorset = [2]*image.Uniform{&image.Uniform{color.Black}, &image.Uniform{LightGrey}}
 var ListCurSel Colorset = [2]*image.Uniform{&image.Uniform{color.White}, &image.Uniform{Blue}}
 var ListSelect Colorset = [2]*image.Uniform{&image.Uniform{color.White}, &image.Uniform{LightBlue}}
+var SplitGutter, SplitGutterActive = Amber, Orange
 
 type RGB uint32
 
@@ -89,13 +90,12 @@ func (c RGB) RGBA() (r, g, b, a uint32) {
 	a = 0xFFFF
 	return
 }
+func (c RGB) Uniform() *image.Uniform {
+	return &image.Uniform{c}
+}
 
 func NewColors(f, b RGB) Colorset {
 	return [2]*image.Uniform{&image.Uniform{f}, &image.Uniform{b}}
-}
-
-func clear(dst *image.RGBA) {
-	draw.Draw(dst, dst.Bounds(), Colors[1], image.ZP, draw.Src)
 }
 
 const ( //materialuicolors.co/ 400

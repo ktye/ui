@@ -47,6 +47,7 @@ func main() {
 	}
 	l.Menu = base.NewMenu()
 	l.List = e
+	l.Execute = func() int { println("exec"); return 0 }
 
 	win = ui.New(dpy.New(nil))
 	win.Top = base.Scale{&l}

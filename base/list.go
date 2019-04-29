@@ -3,6 +3,7 @@ package base
 import (
 	"image"
 	"image/draw"
+	"time"
 )
 
 type List struct {
@@ -19,13 +20,16 @@ type List struct {
 	pagesize  int // number of visible lines
 	clickLine int
 	drag      bool
+	dbl       time.Time
 }
 
-func (l *List) SetList(x []string) {
+func NewList(x []string) *List {
+	var l List
 	l.List = make([]Stringer, len(x))
 	for i := range x {
 		l.List[i] = str(x[i])
 	}
+	return &l
 }
 func (l *List) Selection() (r []int) {
 	for i, s := range l.Sel {
@@ -40,9 +44,11 @@ func (l *List) Draw(dst *image.RGBA, force bool) {
 	if l.Target != nil {
 		*l.Target = l
 	}
+	l.Rect = dst.Rect
 	if force == false && l.draw == false {
 		return
 	}
+	l.draw = false
 	if len(l.List) > 0 && len(l.Sel) != len(l.List) {
 		l.Sel = make([]bool, len(l.List))
 	}
@@ -84,12 +90,15 @@ func (l *List) Draw(dst *image.RGBA, force bool) {
 	}
 }
 func (l *List) Mouse(pos image.Point, but int, dir int, mod uint32) int {
+	line := func() int {
+		return l.top + (pos.Y-l.Rect.Min.Y)/Font.size
+	}
 	switch but {
 	case 0: // move; also if a button is down
 		if l.clickLine == 0 {
 			return 0
 		}
-		if n := 1 + l.top + pos.Y/Font.size - l.clickLine; n != 0 && dir == 0 {
+		if n := 1 + line() - l.clickLine; n != 0 && dir == 0 {
 			l.drag = true
 			if mod&1 != 0 { // but1+shift+move  toggle
 				l.toggleNext(n)
@@ -102,7 +111,7 @@ func (l *List) Mouse(pos image.Point, but int, dir int, mod uint32) int {
 		}
 	case 1:
 		if dir > 0 { // drag start line number + 1
-			l.clickLine = 1 + l.top + pos.Y/Font.size
+			l.clickLine = 1 + line()
 			if mod&1 != 0 { // but1+shift → toggle start
 				if n := l.clickLine - 1; n >= 0 && n < len(l.List) {
 					l.cur = n
@@ -110,13 +119,20 @@ func (l *List) Mouse(pos image.Point, but int, dir int, mod uint32) int {
 				}
 			}
 		} else if dir < 0 && l.drag == false { // but1 release (non-drag) → toggle
-			if n := l.top + pos.Y/Font.size; n+1 == l.clickLine {
+			if n := line(); n+1 == l.clickLine {
 				if n >= 0 && n < len(l.List) {
 					l.cur = n
 					l.toggle()
 				}
 			}
 			l.clickLine = 0
+			t := time.Now()
+			if t.Sub(l.dbl) < 500*time.Millisecond {
+				if l.Execute != nil {
+					l.Execute()
+				}
+			}
+			l.dbl = t
 		} else if dir < 0 && l.drag {
 			l.clickLine = 0
 		}
@@ -141,7 +157,6 @@ func (l *List) Mouse(pos image.Point, but int, dir int, mod uint32) int {
 	return 0
 }
 func (l *List) Key(r rune, code uint32, dir int, mod uint32) int {
-	//println("key", code, dir, r)
 	if len(l.List) == 0 {
 		return 0
 	}
@@ -191,9 +206,13 @@ func (l *List) Key(r rune, code uint32, dir int, mod uint32) int {
 			}
 			l.cur = len(l.List) - 1
 			return l.setview()
-		case 40, 44: // space, enter
+		case 44: // space → toggle
 			l.toggle()
 			return l.DrawSelf()
+		case 40: // enter → execute
+			if l.Execute != nil {
+				return l.Execute()
+			}
 		case 4: // a
 			if mod&2 != 0 { // cntrl-a
 				if l.Single == false {
@@ -223,9 +242,14 @@ func (l *List) setview() int { // set view after changing cur
 	return l.DrawSelf()
 }
 func (l *List) setcur() int { // set cur after changing top
-	if l.top >= len(l.List) {
-		l.top = len(l.List) - 1
+	if l.top+l.pagesize > len(l.List) {
+		l.top = len(l.List) - l.pagesize
 	}
+	/*
+		if l.top >= len(l.List) {
+			l.top = len(l.List) - 1
+		}
+	*/
 	if l.top < 0 {
 		l.top = 0
 	}
