@@ -2,7 +2,6 @@ package base
 
 import (
 	"image"
-	"image/color"
 	"image/draw"
 
 	"golang.org/x/image/font"
@@ -72,10 +71,12 @@ func String(dst *image.RGBA, at image.Point, s string) {
 
 type Colorset [2]*image.Uniform
 
-var Colors Colorset = [2]*image.Uniform{&image.Uniform{color.Black}, &image.Uniform{color.White}}
-var ListCurCol Colorset = [2]*image.Uniform{&image.Uniform{color.Black}, &image.Uniform{LightGrey}}
-var ListCurSel Colorset = [2]*image.Uniform{&image.Uniform{color.White}, &image.Uniform{Blue}}
-var ListSelect Colorset = [2]*image.Uniform{&image.Uniform{color.White}, &image.Uniform{LightBlue}}
+var Colors Colorset = [2]*image.Uniform{Black.Uniform(), White.Uniform()}
+var ListCurCol Colorset = [2]*image.Uniform{Black.Uniform(), LightGrey.Uniform()}
+var ListCurSel Colorset = [2]*image.Uniform{White.Uniform(), Blue.Uniform()}
+var ListSelect Colorset = [2]*image.Uniform{White.Uniform(), LightBlue.Uniform()}
+var ButtonCol Colorset = [2]*image.Uniform{White.Uniform(), LightBlue.Uniform()}
+var ButtonPrim Colorset = [2]*image.Uniform{White.Uniform(), Blue.Uniform()}
 var SplitGutter, SplitGutterActive = Amber, Orange
 
 type RGB uint32

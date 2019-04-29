@@ -1,132 +1,168 @@
 package base
 
-/* TODO port to v2
-
 import (
 	"image"
 	"image/draw"
 
-	"github.com/ktye/ui/paint"
-
-	"golang.org/x/mobile/event/key"
-	"golang.org/x/mobile/event/mouse"
+	"github.com/ktye/ui"
 )
 
 type Button struct {
-	Text     string
-	Icon     string
-	Disabled bool
-	Colorset *Colorset
-	Click    func() (e Event)
-
-	//m    Mouse
-	size image.Point
+	Base
+	Target  **Button
+	Execute func() int
+	Text    string
+	Icon    string
+	Primary bool
+	off     int
 }
 
-func (b *Button) space(w *Window) image.Point {
-	return b.padding(w).Add(pt(BorderSize))
+func NewButton(text, icon string, f func() int) *Button {
+	return &Button{Text: text, Icon: icon, Execute: f}
 }
-
-func (b *Button) padding(w *Window) image.Point {
-	h := w.FontHeight()
-	return image.Pt(h/2, h/4)
-}
-
-func (b *Button) iconSize(w *Window) int {
-	if b.Icon == "" {
-		return 0
-	}
-	h := w.FontHeight()
-	if b.Text == "" {
-		return 3 * h
-	}
-	return h
-}
-
-func (b *Button) Layout(w *Window, self *Kid, sizeAvail image.Point, force bool) {
-	size := b.innerSize(w).Add(b.space(w).Mul(2))
-	b.size = size
-	self.R = rect(size)
-}
-
-func (b *Button) innerSize(w *Window) image.Point {
-	if len(b.Text) > 0 && len(b.Icon) > 0 {
-		h := w.FontHeight()
-		return w.StringSize(b.Text).Add(image.Point{3 * h / 2, 0})
-	} else if len(b.Text) > 0 {
-		return w.StringSize(b.Text)
-	} else {
-		h := b.iconSize(w)
-		return image.Point{h, h}
-	}
-}
-
-func (b *Button) Draw(w *Window, self *Kid, img draw.Image, orig image.Point, m Mouse, force bool) {
-	r := rect(b.innerSize(w).Add(b.space(w).Mul(2)))
-	hover := m.In(r)
-	var colors Colors
-	if b.Disabled {
-		colors = w.Disabled
-	} else {
-		cs := b.Colorset
-		if cs == nil {
-			cs = &w.Regular
-		}
-		colors = cs.Normal
-		if hover {
-			colors = cs.Hover
-		}
-	}
-
-	r = r.Add(orig)
-	draw.Draw(img, r.Inset(1), colors.Background, image.ZP, draw.Src)
-	paint.RoundedBorder(img, r, colors.Border)
-
-	hit := image.ZP
-	if hover && !b.Disabled && m.Button == 1 && m.Direction == mouse.DirPress {
-		hit = image.Pt(0, 1)
-	}
-	p := r.Min.Add(b.space(w)).Add(hit)
-	if b.Icon != "" {
-		size := b.iconSize(w)
-		ico := getIcon(w, icon{b.Icon, size})
-		draw.DrawMask(img, r.Bounds(), &image.Uniform{colors.Text}, image.ZP, ico, r.Min.Sub(p), draw.Over)
-		p = p.Add(image.Point{3 * size / 2, 0})
-	}
-	if b.Text != "" {
-		paint.String(img, p, colors.Text, w.font, b.Text)
-	}
-}
-
-func (b *Button) Mouse(w *Window, self *Kid, m Mouse, origM Mouse, orig image.Point) (r Result) {
-	if b.Disabled {
+func (b *Button) Draw(dst *image.RGBA, force bool) {
+	if force == false && b.draw == false {
 		return
 	}
-	rr := rect(b.size)
-	hover := m.In(rr)
-	if hover && m.Button == 1 && m.Direction == mouse.DirPress {
-		self.Draw = Dirty
+	b.draw = false
+	save := Colors
+	defer func() { Colors = save }()
+	Colors := ButtonCol
+	if b.Primary {
+		Colors = ButtonPrim
 	}
-	if hover && m.Button == 1 && m.Direction == mouse.DirRelease && b.Click != nil {
-		self.Draw = Dirty
-		e := b.Click()
-		propagateEvent(self, &r, e)
+	clear(dst)
+	x := Font.size
+	if b.Icon != "" {
+		r := dst.Rect.Add(image.Point{Font.size + b.off, Font.size + b.off})
+		ico := getIcon(icon{b.Icon, 2 * Font.size})
+		draw.DrawMask(dst, r, Colors[0], image.ZP, ico, image.ZP, draw.Over)
+		x += 3 * Font.size
 	}
-	return r
+	if b.Text != "" {
+		String(dst, image.Point{x + b.off, Font.size + b.off}, b.Text)
+	}
 }
-
-func (b *Button) Key(w *Window, self *Kid, k key.Event, m Mouse, orig image.Point) (r Result) {
-	if !b.Disabled && (k.Rune == ' ' || k.Rune == '\n') && k.Direction == key.DirRelease {
-		r.Consumed = true
-		if b.Click != nil {
-			e := b.Click()
-			propagateEvent(self, &r, e)
+func (b *Button) Mouse(pos image.Point, but int, dir int, mod uint32) int {
+	if but == 1 && dir > 0 {
+		b.off = 1
+		return b.DrawSelf()
+	} else if but == 1 && dir < 0 {
+		b.off = 0
+		draw := 1
+		if b.Execute != nil {
+			if b.Execute() < 0 {
+				draw = -1
+			}
+		}
+		return draw
+	}
+	return 0
+}
+func (b *Button) Key(r rune, code uint32, dir int, mod uint32) int {
+	if dir > 0 && (code == 44 || code == 40) { // space, enter → execute
+		if b.Execute != nil {
+			return b.Execute()
 		}
 	}
-	return
+	return 0
+}
+func (b *Button) Size() image.Point {
+	p := StringSize(b.Text)
+	p.X += 2 * Font.size
+	if b.Icon != "" {
+		p.X += 3 * Font.size
+	}
+	p.Y = 3 * Font.size
+	return p
 }
 
-func (b *Button) Mark(self *Kid, o Widget, forLayout bool) (marked bool) {
-	return self.Mark(o, forLayout)
+// A button bar places buttons below a kid widget.
+type ButtonBar struct {
+	Base
+	Target  **ButtonBar
+	Kid     Kid
+	Buttons []*Button
+	but     []Kid
+	focus   int
 }
-*/
+
+func NewButtonBar(kid ui.Widget, buttons []*Button) *ButtonBar {
+	var b ButtonBar
+	b.Kid = Kid{Widget: kid}
+	b.Buttons = buttons
+	return &b
+}
+func (b *ButtonBar) Draw(dst *image.RGBA, force bool) {
+	if b.Target != nil {
+		*b.Target = b
+	}
+	if b.but == nil {
+		b.but = make([]Kid, len(b.Buttons))
+		for i := range b.but {
+			b.but[i] = Kid{Widget: b.Buttons[i]}
+		}
+	}
+	if dst.Rect != b.Rect {
+		b.Rect = dst.Rect
+		sum := 0
+		for i := range b.Buttons {
+			s := b.Buttons[i].Size()
+			sum += s.X
+		}
+		space := dst.Rect.Dx() - sum
+		if space < 0 {
+			space = 0
+		}
+		space /= len(b.Buttons) + 1
+		p := image.Point{dst.Rect.Min.X, dst.Rect.Max.Y - 3*Font.size}
+		for i := range b.but {
+			p = p.Add(image.Point{space, 0})
+			s := b.Buttons[i].Size()
+			b.but[i].Rectangle = image.Rectangle{Min: p, Max: p.Add(s)}
+			p = p.Add(image.Point{s.X, 0})
+		}
+	}
+	if force == false && b.draw == false {
+		if b.Kid.Widget != nil {
+			b.Kid.Draw(dst, force)
+		}
+		for i := range b.but {
+			b.but[i].Draw(dst, force)
+		}
+		return
+	}
+	b.draw = false
+}
+func (b *ButtonBar) Mouse(pos image.Point, but int, dir int, mod uint32) int {
+	if but == 1 && dir > 0 {
+		b.focus = -1
+		for i := range b.but {
+			if pos.In(b.but[i].Rectangle) {
+				b.focus = i
+			}
+		}
+	}
+	if b.Kid.Widget != nil {
+		if pos.In(b.Kid.Rectangle) {
+			return b.Kid.Mouse(pos, but, dir, mod)
+		}
+	}
+	for range b.but {
+		if pos.In(b.Kid.Rectangle) {
+			return b.Kid.Mouse(pos, but, dir, mod)
+		}
+	}
+	return 0
+}
+func (b *ButtonBar) Key(r rune, code uint32, dir int, mod uint32) int {
+	// TODO: set focus with TAB
+	// TODO: default Focus to first button
+	if n := b.focus; n > 0 {
+		return b.but[n-1].Key(r, code, dir, mod)
+	}
+	if b.Kid.Widget != nil {
+		return b.Kid.Key(r, code, dir, mod)
+	}
+	return 0
+}

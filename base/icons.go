@@ -1,7 +1,5 @@
 package base
 
-/* TODO port to v2
-
 import (
 	"image"
 	"image/draw"
@@ -37,9 +35,9 @@ var icons map[icon]image.Image
 
 // GetIcon returns an icon image from cache or renders the icon on demand.
 // If it does not exist, a grey image is returned.
-func getIcon(w *Window, id icon) image.Image {
+func getIcon(id icon) image.Image {
 	if id.name == "" || id.size <= 0 {
-		return unknownIcon(w.FontHeight())
+		return unknownIcon(Font.size)
 	}
 	ic, ok := icons[id]
 	if ok {
@@ -62,10 +60,10 @@ func getIcon(w *Window, id icon) image.Image {
 }
 
 func unknownIcon(size int) image.Image {
-	return image.NewGray(rect(image.Point{size, size}))
+	var r image.Rectangle
+	r.Max = image.Point{size, size}
+	return image.NewGray(r)
 }
-
-*/
 
 /* List of icons in golang.org/x/exp/shiny/materialdesign/icons
 Action3DRotation
