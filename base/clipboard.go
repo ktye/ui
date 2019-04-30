@@ -1,3 +1,5 @@
+// +build !js
+
 package base
 
 import "github.com/eaburns/T/clipboard"
