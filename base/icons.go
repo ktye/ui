@@ -60,6 +60,7 @@ func getIcon(id icon) image.Image {
 }
 
 func unknownIcon(size int) image.Image {
+	println("unknown icon!")
 	var r image.Rectangle
 	r.Max = image.Point{size, size}
 	return image.NewGray(r)

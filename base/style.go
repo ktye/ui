@@ -76,7 +76,7 @@ var ListCurCol Colorset = [2]*image.Uniform{Black.Uniform(), LightGrey.Uniform()
 var ListCurSel Colorset = [2]*image.Uniform{White.Uniform(), Blue.Uniform()}
 var ListSelect Colorset = [2]*image.Uniform{White.Uniform(), LightBlue.Uniform()}
 var ButtonCol Colorset = [2]*image.Uniform{White.Uniform(), LightBlue.Uniform()}
-var ButtonPrim Colorset = [2]*image.Uniform{White.Uniform(), Blue.Uniform()}
+var ButtonPrim Colorset = [2]*image.Uniform{White.Uniform(), DeepBlue.Uniform()}
 var SplitGutter, SplitGutterActive = Amber, Orange
 
 type RGB uint32
@@ -101,7 +101,7 @@ func NewColors(f, b RGB) Colorset {
 
 const ( //materialuicolors.co/ 400
 	White, Black, Grey, LightGrey     RGB = 0xFFFFFF, 0x000000, 0x78909C, 0xBDBDBD
-	Red, Green, Blue                  RGB = 0xEF5350, 0x66BB6A, 0x42A5F5
+	Red, Green, Blue, DeepBlue        RGB = 0xEF5350, 0x66BB6A, 0x42A5F5, 0x1E88E5
 	LightBlue, Cyan, Indigo, Teal     RGB = 0x29B6F6, 0x26C6DA, 0x5C6BC0, 0x26A69A
 	Yellow, Amber, Orange, DeepOrange RGB = 0xFFEE58, 0xFFCA28, 0xFFA726, 0xFF7043
 	LightGreen, Lime, Brown           RGB = 0x9CCC65, 0xD4E157, 0x8D6E63
