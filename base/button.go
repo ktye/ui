@@ -214,3 +214,12 @@ func (b *ButtonBar) Key(r rune, code uint32, dir int, mod uint32) int {
 	}
 	return 0
 }
+func (b *ButtonBar) MenuSize() image.Point {
+	h := 0
+	for i := range b.Buttons {
+		if s := b.Buttons[i].Size().X; s > h {
+			h = s
+		}
+	}
+	return image.Point{h, 3 * Font.size * len(b.Buttons)}
+}

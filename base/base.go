@@ -18,6 +18,32 @@ func (b *Base) DrawSelf() int {
 	return 1
 }
 
+func (b *Base) ShowMenu(p image.Point) int {
+	if b.Menu != nil {
+		b.Menu.active = true
+		b.Menu.point = p
+		return 1
+	}
+	return 0
+}
+func (b *Base) DrawMenu(dst *image.RGBA) {
+	if b.Menu != nil {
+		b.Menu.drawMenu(dst)
+	}
+}
+func (b *Base) MenuMouse(pos image.Point, but int, dir int, mod uint32) (int, bool) {
+	if b.Menu != nil && b.Menu.active {
+		return b.Menu.mouse(pos, but, dir, mod), true
+	}
+	return 0, false
+}
+func (b *Base) MenuKey(r rune, code uint32, dir int, mod uint32) (int, bool) {
+	if b.Menu != nil && b.Menu.active {
+		return b.Menu.key(r, code, dir, mod), true
+	}
+	return 0, false
+}
+
 type Kid struct {
 	ui.Widget
 	image.Rectangle

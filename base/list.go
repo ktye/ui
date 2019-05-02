@@ -88,8 +88,12 @@ func (l *List) Draw(dst *image.RGBA, force bool) {
 			break
 		}
 	}
+	l.DrawMenu(dst)
 }
 func (l *List) Mouse(pos image.Point, but int, dir int, mod uint32) int {
+	if r, o := l.MenuMouse(pos, but, dir, mod); o {
+		return r
+	}
 	line := func() int {
 		return l.top + (pos.Y-l.Rect.Min.Y)/Font.size
 	}
@@ -150,13 +154,16 @@ func (l *List) Mouse(pos image.Point, but int, dir int, mod uint32) int {
 				l.Sel = make([]bool, len(l.List))
 				return l.DrawSelf()
 			} else if l.Menu != nil { // right-click or long-press → menu
-				return l.Menu.Show()
+				return l.ShowMenu(pos)
 			}
 		}
 	}
 	return 0
 }
 func (l *List) Key(r rune, code uint32, dir int, mod uint32) int {
+	if r, o := l.MenuKey(r, code, dir, mod); o {
+		return r
+	}
 	if len(l.List) == 0 {
 		return 0
 	}
