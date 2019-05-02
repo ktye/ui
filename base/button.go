@@ -82,11 +82,12 @@ func (b *Button) Size() image.Point {
 // A button bar places buttons below a kid widget.
 type ButtonBar struct {
 	Base
-	Target  **ButtonBar
-	Kid     Kid
-	Buttons []*Button
-	but     []Kid
-	focus   int
+	Target   **ButtonBar
+	Kid      Kid
+	Buttons  []*Button
+	Vertical bool
+	but      []Kid
+	focus    int
 }
 
 func NewButtonBar(kid ui.Widget, buttons []*Button) *ButtonBar {
@@ -111,29 +112,41 @@ func (b *ButtonBar) Draw(dst *image.RGBA, force bool) {
 	}
 	if force || dst.Rect != b.Rect {
 		b.Rect = dst.Rect
-		sum := 0
+		sum, ishor, isver := 0, 1, 0
+		if b.Vertical {
+			ishor, isver = 0, 1
+		}
+		hsize := 0
 		for i := range b.Buttons {
 			s := b.Buttons[i].Size()
-			sum += s.X
+			b.but[i].Rectangle.Max = s
+			sum += s.X*ishor + s.Y*isver
+			if s.X > hsize {
+				hsize = s.X
+			}
 		}
 		space := dst.Rect.Dx() - sum
 		if space < 0 {
 			space = 0
 		}
 		space /= len(b.Buttons) + 1
-		p := image.Point{dst.Rect.Min.X, dst.Rect.Max.Y - 3*Font.size + 1}
+		p := image.Point{dst.Rect.Min.X + isver, isver*(1+dst.Rect.Min.Y) + ishor*(dst.Rect.Max.Y-3*Font.size+1)}
 		for i := range b.but {
-			p = p.Add(image.Point{space, 0})
-			s := b.Buttons[i].Size()
+			p = p.Add(image.Point{space * ishor, 0})
+			s := b.but[i].Rectangle.Max
+			s.X = s.X*ishor + hsize*isver
 			b.but[i].Rectangle = image.Rectangle{Min: p, Max: p.Add(s)}
-			p = p.Add(image.Point{s.X, 0})
+			p = p.Add(image.Point{s.X * ishor, (s.Y + 1) * isver})
 		}
 		if b.Kid.Widget != nil {
 			b.Kid.Rectangle = dst.Rect
-			b.Kid.Rectangle.Max.Y -= 3 * Font.size
+			b.Kid.Rectangle.Max.Y -= 3 * Font.size * ishor
+			b.Kid.Rectangle.Min.X += (2 + hsize) * isver
 		}
 		bar := b.Rect
-		bar.Min.Y = bar.Max.Y - 3*Font.size
+		if !b.Vertical {
+			bar.Min.Y = bar.Max.Y - 3*Font.size
+		}
 		draw.Draw(dst, bar, Colors[1], image.ZP, draw.Src)
 	}
 	if force || b.draw {

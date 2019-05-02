@@ -29,19 +29,19 @@ func main() {
 	textButtons = []*base.Button{
 		base.NewButton("Ok", "", nil),
 		base.NewButton("Icons", "", func() int { bp.SetButtons(iconButtons); return -1 }),
-		base.NewButton("Cancel", "", nil),
+		base.NewButton("Cancel", "", func() int { bp.Vertical = !bp.Vertical; return -1 }),
 	}
 
 	iconButtons = []*base.Button{
 		base.NewButton("", "ActionDone", nil),
 		base.NewButton("", "ActionSettingsInputComponent", func() int { bp.SetButtons(bothButtons); return -1 }),
-		base.NewButton("", "NavigationCancel", nil),
+		base.NewButton("", "NavigationCancel", func() int { bp.Vertical = !bp.Vertical; return -1 }),
 	}
 
 	bothButtons = []*base.Button{
 		base.NewButton("Ok", "PlacesSmokeFree", nil),
 		base.NewButton("Icons", "SocialPerson", func() int { bp.SetButtons(textButtons); return -1 }),
-		base.NewButton("Ignore", "ToggleIndeterminateCheckBox", nil),
+		base.NewButton("Ignore", "ToggleIndeterminateCheckBox", func() int { bp.Vertical = !bp.Vertical; return -1 }),
 	}
 
 	bar := base.NewButtonBar(&panel{}, textButtons)
