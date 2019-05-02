@@ -27,21 +27,21 @@ func main() {
 	var textButtons, iconButtons, bothButtons []*base.Button
 
 	textButtons = []*base.Button{
-		base.NewButton("Ok", "", nil),
+		base.NewButton("Flip", "", func() int { bp.Flip = !bp.Flip; return -1 }),
 		base.NewButton("Icons", "", func() int { bp.SetButtons(iconButtons); return -1 }),
-		base.NewButton("Cancel", "", func() int { bp.Vertical = !bp.Vertical; return -1 }),
+		base.NewButton("Vertical", "", func() int { bp.Vertical = !bp.Vertical; return -1 }),
 	}
 
 	iconButtons = []*base.Button{
-		base.NewButton("", "ActionDone", nil),
+		base.NewButton("", "ActionDone", func() int { bp.Flip = !bp.Flip; return -1 }),
 		base.NewButton("", "ActionSettingsInputComponent", func() int { bp.SetButtons(bothButtons); return -1 }),
 		base.NewButton("", "NavigationCancel", func() int { bp.Vertical = !bp.Vertical; return -1 }),
 	}
 
 	bothButtons = []*base.Button{
-		base.NewButton("Ok", "PlacesSmokeFree", nil),
+		base.NewButton("Flip", "PlacesSmokeFree", func() int { bp.Flip = !bp.Flip; return -1 }),
 		base.NewButton("Icons", "SocialPerson", func() int { bp.SetButtons(textButtons); return -1 }),
-		base.NewButton("Ignore", "ToggleIndeterminateCheckBox", func() int { bp.Vertical = !bp.Vertical; return -1 }),
+		base.NewButton("Vertical", "ToggleIndeterminateCheckBox", func() int { bp.Vertical = !bp.Vertical; return -1 }),
 	}
 
 	bar := base.NewButtonBar(&panel{}, textButtons)

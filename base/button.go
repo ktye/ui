@@ -86,6 +86,7 @@ type ButtonBar struct {
 	Kid      Kid
 	Buttons  []*Button
 	Vertical bool
+	Flip     bool // top or right
 	but      []Kid
 	focus    int
 }
@@ -112,9 +113,12 @@ func (b *ButtonBar) Draw(dst *image.RGBA, force bool) {
 	}
 	if force || dst.Rect != b.Rect {
 		b.Rect = dst.Rect
-		sum, ishor, isver := 0, 1, 0
+		sum, ishor, isver, isflip := 0, 1, 0, 0
 		if b.Vertical {
 			ishor, isver = 0, 1
+		}
+		if b.Flip {
+			isflip = 1
 		}
 		hsize := 0
 		for i := range b.Buttons {
@@ -130,7 +134,8 @@ func (b *ButtonBar) Draw(dst *image.RGBA, force bool) {
 			space = 0
 		}
 		space /= len(b.Buttons) + 1
-		p := image.Point{dst.Rect.Min.X + isver, isver*(1+dst.Rect.Min.Y) + ishor*(dst.Rect.Max.Y-3*Font.size+1)}
+		p := image.Point{dst.Rect.Min.X + isver, isver*(1+dst.Rect.Min.Y) + (1-isflip)*ishor*(dst.Rect.Max.Y-3*Font.size+1)}
+		p.X += isver * isflip * (dst.Rect.Dx() - hsize - 2)
 		for i := range b.but {
 			p = p.Add(image.Point{space * ishor, 0})
 			s := b.but[i].Rectangle.Max
@@ -140,13 +145,13 @@ func (b *ButtonBar) Draw(dst *image.RGBA, force bool) {
 		}
 		if b.Kid.Widget != nil {
 			b.Kid.Rectangle = dst.Rect
-			b.Kid.Rectangle.Max.Y -= 3 * Font.size * ishor
-			b.Kid.Rectangle.Min.X += (2 + hsize) * isver
+			b.Kid.Rectangle.Min.X += (2 + hsize) * isver * (1 - isflip)
+			b.Kid.Rectangle.Min.Y += ishor * isflip * 3 * Font.size
+			b.Kid.Rectangle.Max.X -= isver * isflip * (2 + hsize)
+			b.Kid.Rectangle.Max.Y -= 3 * Font.size * ishor * (1 - isflip)
 		}
 		bar := b.Rect
-		if !b.Vertical {
-			bar.Min.Y = bar.Max.Y - 3*Font.size
-		}
+		bar.Min.Y = ishor * (1 - isflip) * (bar.Max.Y - 3*Font.size)
 		draw.Draw(dst, bar, Colors[1], image.ZP, draw.Src)
 	}
 	if force || b.draw {
