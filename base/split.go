@@ -82,9 +82,9 @@ func (s *Split) Mouse(pos image.Point, but int, dir int, mod uint32) int {
 			return s.DrawSelf()
 		}
 	} else if dir == 0 && s.drag { // gutter drag
-		a := pos.Y
+		a := pos.Y - s.Rect.Min.Y
 		if s.Vertical {
-			a = pos.X
+			a = pos.X - s.Rect.Min.X
 		}
 		if s.size > 0 {
 			s.Ratio = float64(2*a-s.size) / float64(s.size)
