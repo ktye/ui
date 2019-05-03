@@ -27,14 +27,19 @@ func main() {
 	var textButtons, iconButtons, bothButtons []*base.Button
 
 	textButtons = []*base.Button{
+		base.FillButton(),
 		base.NewButton("Flip", "", func() int { bp.Flip = !bp.Flip; return -1 }),
+		base.FillButton(),
 		base.NewButton("Icons", "", func() int { bp.SetButtons(iconButtons); return -1 }),
+		base.FillButton(),
 		base.NewButton("Vertical", "", func() int { bp.Vertical = !bp.Vertical; return -1 }),
+		base.FillButton(),
 	}
 
 	iconButtons = []*base.Button{
 		base.NewButton("", "ActionDone", func() int { bp.Flip = !bp.Flip; return -1 }),
 		base.NewButton("", "ActionSettingsInputComponent", func() int { bp.SetButtons(bothButtons); return -1 }),
+		base.FillButton(),
 		base.NewButton("", "NavigationCancel", func() int { bp.Vertical = !bp.Vertical; return -1 }),
 	}
 

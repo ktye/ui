@@ -13,13 +13,16 @@ type Button struct {
 	Execute func() int
 	Text    string
 	Icon    string
+	Color   *image.Uniform
 	Primary bool
 	off     int
+	fill    bool
 }
 
 func NewButton(text, icon string, f func() int) *Button {
 	return &Button{Text: text, Icon: icon, Execute: f}
 }
+func FillButton() *Button { return &Button{fill: true} }
 func (b *Button) Draw(dst *image.RGBA, force bool) {
 	if force == false && b.draw == false {
 		return
@@ -67,6 +70,9 @@ func (b *Button) Key(r rune, code uint32, dir int, mod uint32) int {
 	return 0
 }
 func (b *Button) Size() image.Point {
+	if b.fill {
+		return image.Point{}
+	}
 	if b.Text == "" {
 		return image.Point{3*Font.size - 2, 3*Font.size - 2}
 	}
@@ -120,7 +126,7 @@ func (b *ButtonBar) Draw(dst *image.RGBA, force bool) {
 		if b.Flip {
 			isflip = 1
 		}
-		hsize := 0
+		hsize, fills := 0, 0
 		for i := range b.Buttons {
 			s := b.Buttons[i].Size()
 			b.but[i].Rectangle.Max = s
@@ -128,20 +134,28 @@ func (b *ButtonBar) Draw(dst *image.RGBA, force bool) {
 			if s.X > hsize {
 				hsize = s.X
 			}
+			if b.Buttons[i].fill {
+				fills++
+			}
 		}
-		space := dst.Rect.Dx() - sum
+		space := ishor*dst.Rect.Dx() + isver*dst.Rect.Dy() - sum
 		if space < 0 {
 			space = 0
 		}
-		space /= len(b.Buttons) + 1
+		if fills > 0 {
+			space /= fills
+		}
 		p := image.Point{dst.Rect.Min.X + isver, isver*(1+dst.Rect.Min.Y) + (1-isflip)*ishor*(dst.Rect.Max.Y-3*Font.size+1)}
 		p.X += isver * isflip * (dst.Rect.Dx() - hsize - 2)
 		for i := range b.but {
-			p = p.Add(image.Point{space * ishor, 0})
-			s := b.but[i].Rectangle.Max
-			s.X = s.X*ishor + hsize*isver
-			b.but[i].Rectangle = image.Rectangle{Min: p, Max: p.Add(s)}
-			p = p.Add(image.Point{s.X * ishor, (s.Y + 1) * isver})
+			if b.Buttons[i].fill {
+				p = p.Add(image.Point{space * ishor, space * isver})
+			} else {
+				s := b.but[i].Rectangle.Max
+				s.X = s.X*ishor + hsize*isver
+				b.but[i].Rectangle = image.Rectangle{Min: p, Max: p.Add(s)}
+				p = p.Add(image.Point{s.X * ishor, (s.Y + 1) * isver})
+			}
 		}
 		if b.Kid.Widget != nil {
 			b.Kid.Rectangle = dst.Rect
@@ -199,9 +213,14 @@ func (b *ButtonBar) Mouse(pos image.Point, but int, dir int, mod uint32) int {
 func (b *ButtonBar) Key(r rune, code uint32, dir int, mod uint32) int {
 	if code == 43 { // tab
 		if dir > 0 {
-			b.focus++
-			if b.focus >= len(b.Buttons) {
-				b.focus = 0
+			for {
+				b.focus++
+				if b.focus >= len(b.Buttons) {
+					b.focus = 0
+				}
+				if b.Buttons[b.focus].fill == false {
+					break
+				}
 			}
 		}
 		return b.DrawSelf()
@@ -215,11 +234,14 @@ func (b *ButtonBar) Key(r rune, code uint32, dir int, mod uint32) int {
 	return 0
 }
 func (b *ButtonBar) MenuSize() image.Point {
-	h := 0
+	h, count := 0, 0
 	for i := range b.Buttons {
 		if s := b.Buttons[i].Size().X; s > h {
 			h = s
 		}
+		if b.Buttons[i].fill == false {
+			count++
+		}
 	}
-	return image.Point{h, 3 * Font.size * len(b.Buttons)}
+	return image.Point{h, 3 * Font.size * count}
 }
