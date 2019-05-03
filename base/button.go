@@ -13,7 +13,7 @@ type Button struct {
 	Execute func() int
 	Text    string
 	Icon    string
-	Color   *image.Uniform
+	Colors  Colorset
 	Primary bool
 	off     int
 	fill    bool
@@ -30,7 +30,10 @@ func (b *Button) Draw(dst *image.RGBA, force bool) {
 	b.draw = false
 	save := Colors
 	defer func() { Colors = save }()
-	Colors = ButtonCol
+	Colors = b.Colors
+	if b.Colors[0] == nil || b.Colors[1] == nil {
+		Colors = ButtonCol
+	}
 	if b.Primary {
 		Colors = ButtonPrim
 	}
