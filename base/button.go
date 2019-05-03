@@ -70,18 +70,19 @@ func (b *Button) Key(r rune, code uint32, dir int, mod uint32) int {
 	return 0
 }
 func (b *Button) Size() image.Point {
+	H := 3 * Font.size
 	if b.fill {
 		return image.Point{}
 	}
 	if b.Text == "" {
-		return image.Point{3*Font.size - 2, 3*Font.size - 2}
+		return image.Point{H, H}
 	}
 	p := StringSize(b.Text)
 	p.X += 2 * Font.size
 	if b.Icon != "" {
-		p.X += 3*Font.size - 2
+		p.X += H
 	}
-	p.Y = 3*Font.size - 2
+	p.Y = H
 	return p
 }
 
@@ -119,7 +120,7 @@ func (b *ButtonBar) Draw(dst *image.RGBA, force bool) {
 	}
 	if force || dst.Rect != b.Rect {
 		b.Rect = dst.Rect
-		sum, ishor, isver, isflip := 0, 1, 0, 0
+		sum, ishor, isver, isflip, H := 0, 1, 0, 0, 3*Font.size
 		if b.Vertical {
 			ishor, isver = 0, 1
 		}
@@ -145,27 +146,30 @@ func (b *ButtonBar) Draw(dst *image.RGBA, force bool) {
 		if fills > 0 {
 			space /= fills
 		}
-		p := image.Point{dst.Rect.Min.X + isver, isver*(1+dst.Rect.Min.Y) + (1-isflip)*ishor*(dst.Rect.Max.Y-3*Font.size+1)}
-		p.X += isver * isflip * (dst.Rect.Dx() - hsize - 2)
+		p := image.Point{dst.Rect.Min.X, isver*dst.Rect.Min.Y + (1-isflip)*ishor*(dst.Rect.Max.Y-H)}
+		p.X += isver * isflip * (dst.Rect.Dx() - hsize)
 		for i := range b.but {
 			if b.Buttons[i].fill {
 				p = p.Add(image.Point{space * ishor, space * isver})
 			} else {
 				s := b.but[i].Rectangle.Max
 				s.X = s.X*ishor + hsize*isver
-				b.but[i].Rectangle = image.Rectangle{Min: p, Max: p.Add(s)}
-				p = p.Add(image.Point{s.X * ishor, (s.Y + 1) * isver})
+				r := image.Rectangle{Min: p, Max: p.Add(s)}
+				r.Min = r.Min.Add(image.Point{1, 1})
+				r.Max = r.Max.Sub(image.Point{1, 1})
+				b.but[i].Rectangle = r
+				p = p.Add(image.Point{s.X * ishor, s.Y * isver})
 			}
 		}
 		if b.Kid.Widget != nil {
 			b.Kid.Rectangle = dst.Rect
-			b.Kid.Rectangle.Min.X += (2 + hsize) * isver * (1 - isflip)
-			b.Kid.Rectangle.Min.Y += ishor * isflip * 3 * Font.size
-			b.Kid.Rectangle.Max.X -= isver * isflip * (2 + hsize)
-			b.Kid.Rectangle.Max.Y -= 3 * Font.size * ishor * (1 - isflip)
+			b.Kid.Rectangle.Min.X += hsize * isver * (1 - isflip)
+			b.Kid.Rectangle.Min.Y += ishor * isflip * H
+			b.Kid.Rectangle.Max.X -= isver * isflip * hsize
+			b.Kid.Rectangle.Max.Y -= H * ishor * (1 - isflip)
 		}
 		bar := b.Rect
-		bar.Min.Y = ishor * (1 - isflip) * (bar.Max.Y - 3*Font.size)
+		bar.Min.Y = ishor * (1 - isflip) * (bar.Max.Y - H)
 		draw.Draw(dst, bar, Colors[1], image.ZP, draw.Src)
 	}
 	if force || b.draw {
