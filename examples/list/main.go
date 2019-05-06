@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/ktye/iv/cmd/lui/font"
+	"github.com/ktye/iv/cmd/lui/apl385"
 	"github.com/ktye/ui"
 	"github.com/ktye/ui/base"
 	"github.com/ktye/ui/dpy"
@@ -20,7 +20,7 @@ func (e entry) String() string { return e.s }
 func (e entry) Color() int     { return e.c }
 
 func main() {
-	base.SetFont(font.APL385(), 20)
+	base.SetFont(apl385.TTF(), 20)
 	l := base.List{Single: false}
 	e := make([]base.Stringer, 1000)
 	for i := range e {
@@ -45,9 +45,10 @@ func main() {
 		base.NewColors(base.Green, base.White),     // 3 green
 		base.NewColors(base.Red, base.White),       // 4 red
 	}
-	l.Menu = base.NewMenu()
 	l.List = e
 	l.Execute = func() int { println("exec"); return 0 }
+
+	// TODO: contextmenu with delete
 
 	win = ui.New(dpy.New(nil))
 	win.Top = base.Scale{&l}

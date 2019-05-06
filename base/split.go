@@ -30,12 +30,12 @@ func (s *Split) Draw(dst *image.RGBA, force bool) {
 		*s.Target = s
 	}
 	s.Rect = dst.Rect
-	if force == false && s.draw == false {
+	if force == false && s.Dirty == false {
 		s.Kids[0].Draw(dst, force)
 		s.Kids[1].Draw(dst, force)
 		return
 	}
-	s.draw = false
+	s.Dirty = false
 	s.size = dst.Rect.Dy()
 	if s.Vertical {
 		s.size = dst.Rect.Dx()

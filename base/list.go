@@ -45,10 +45,10 @@ func (l *List) Draw(dst *image.RGBA, force bool) {
 		*l.Target = l
 	}
 	l.Rect = dst.Rect
-	if force == false && l.draw == false {
+	if force == false && l.Dirty == false {
 		return
 	}
-	l.draw = false
+	l.Dirty = false
 	if len(l.List) > 0 && len(l.Sel) != len(l.List) {
 		l.Sel = make([]bool, len(l.List))
 	}

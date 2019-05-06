@@ -4,7 +4,7 @@ import (
 	"image"
 	"image/draw"
 
-	"github.com/ktye/iv/cmd/lui/font"
+	"github.com/ktye/iv/cmd/lui/apl385"
 	"github.com/ktye/ui"
 	"github.com/ktye/ui/base"
 	"github.com/ktye/ui/dpy"
@@ -53,7 +53,7 @@ func main() {
 	bar.Target = &bp
 	win = ui.New(dpy.New(nil))
 	win.Top = base.Scale{bar}
-	base.SetFont(font.APL385(), 20)
+	base.SetFont(apl385.TTF(), 20)
 	done := win.Run()
 	<-done
 }

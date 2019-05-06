@@ -24,10 +24,13 @@ func NewButton(text, icon string, f func() int) *Button {
 }
 func FillButton() *Button { return &Button{fill: true} }
 func (b *Button) Draw(dst *image.RGBA, force bool) {
-	if force == false && b.draw == false {
+	if b.Target != nil {
+		*b.Target = b
+	}
+	if force == false && b.Dirty == false {
 		return
 	}
-	b.draw = false
+	b.Dirty = false
 	save := Colors
 	defer func() { Colors = save }()
 	Colors = b.Colors
@@ -175,14 +178,14 @@ func (b *ButtonBar) Draw(dst *image.RGBA, force bool) {
 		bar.Min.Y = ishor * (1 - isflip) * (bar.Max.Y - H)
 		draw.Draw(dst, bar, Colors[1], image.ZP, draw.Src)
 	}
-	if force || b.draw {
+	if force || b.Dirty {
 		for i := range b.Buttons {
 			if b.Buttons[i].Primary {
-				b.Buttons[i].draw = true
+				b.Buttons[i].Dirty = true
 				b.Buttons[i].Primary = false
 			}
 			if b.focus == i {
-				b.Buttons[i].draw = true
+				b.Buttons[i].Dirty = true
 				b.Buttons[i].Primary = true
 			}
 		}

@@ -1,7 +1,8 @@
-// Package tb is used to implement the edit widget.
-//
+package editor
+
+// The editor widget is based on github.com/eaburns/T.
+// This file is the glue code between ui and T's textbox widget.
 // It is a modification of github.com/eaburns/T/ui/text_box.go
-package tb
 
 // Modifications are commented with "ktye:"
 
@@ -18,11 +19,11 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/eaburns/T/clipboard"
 	"github.com/eaburns/T/edit"
 	"github.com/eaburns/T/rope"
 	"github.com/eaburns/T/syntax"
 	"github.com/eaburns/T/text"
+	"github.com/ktye/ui/base"
 	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
 )
@@ -38,7 +39,7 @@ const (
 	cursorWidthPx = 4
 )
 
-// TextBox is an editable text box UI widget.
+// TextBox should not be used directly. Use Edit instead as the widget interface.
 type TextBox struct {
 	mods [4]bool // ktye: from win.go
 	size image.Point
@@ -260,20 +261,21 @@ func (b *TextBox) Change(diffs edit.Diffs) {
 	}
 }
 
-// ktye: added clipboard as a parameter to Copy, Paste, Cut
+// ktye: added base.Clipboard to Copy, Paste, Cut
 
 // Copy copies the selected text into the system clipboard.
-func (b *TextBox) Copy(cb clipboard.Clipboard) error {
+func (b *TextBox) Copy() error {
 	r := rope.Slice(b.text, b.dots[1].At[0], b.dots[1].At[1])
-	return cb.Store(r)
+	return base.Clipboard.Store(r.String())
 }
 
 // Paste pastes the text from the system clipboard to the selection.
-func (b *TextBox) Paste(cb clipboard.Clipboard) error {
-	r, err := cb.Fetch()
+func (b *TextBox) Paste() error {
+	s, err := base.Clipboard.Fetch()
 	if err != nil {
 		return err
 	}
+	r := rope.New(s)
 	b.Change(edit.Diffs{{At: b.dots[1].At, Text: r}})
 	b.dots[1].At[1] = b.dots[1].At[0] + r.Len() // ktye: set dot to pasted text
 	return nil
@@ -281,8 +283,8 @@ func (b *TextBox) Paste(cb clipboard.Clipboard) error {
 
 // Cut copies the selected text into the system clipboard
 // and deletes it from the text box.
-func (b *TextBox) Cut(cb clipboard.Clipboard) error {
-	if err := b.Copy(cb); err != nil {
+func (b *TextBox) Cut() error {
+	if err := b.Copy(); err != nil {
 		return err
 	}
 	b.Change(edit.Diffs{{At: b.dots[1].At, Text: rope.Empty()}})

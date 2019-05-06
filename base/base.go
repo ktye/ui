@@ -8,13 +8,13 @@ import (
 )
 
 type Base struct {
-	Menu *Menu
-	Rect image.Rectangle
-	draw bool
+	Menu  *Menu
+	Rect  image.Rectangle
+	Dirty bool
 }
 
 func (b *Base) DrawSelf() int {
-	b.draw = true
+	b.Dirty = true
 	return 1
 }
 

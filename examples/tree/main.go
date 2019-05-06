@@ -1,5 +1,7 @@
 package main
 
+/* TODO port to v2
+
 import (
 	"flag"
 	"fmt"
@@ -8,7 +10,7 @@ import (
 	"path/filepath"
 
 	"github.com/eaburns/T/rope"
-	"github.com/ktye/iv/cmd/lui/font"
+	"github.com/ktye/iv/cmd/lui/apl385"
 	"github.com/ktye/ui"
 	"golang.org/x/mobile/event/key"
 )
@@ -42,7 +44,7 @@ func main() {
 	}
 
 	win = ui.New(nil)
-	win.SetFont(font.APL385(), 20)
+	win.SetFont(apl385.TTF(), 20)
 	win.Top.W = t
 	win.Render()
 
@@ -138,3 +140,4 @@ func top(w ui.Widget) {
 	win.Top.Draw = ui.Dirty
 	win.Render()
 }
+*/

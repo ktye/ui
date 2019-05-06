@@ -20,6 +20,10 @@ type fnt struct {
 	metrics font.Metrics
 }
 
+func (f fnt) Size() int {
+	return f.size
+}
+
 func SetFont(ttf []byte, size int) {
 	f, err := truetype.Parse(ttf)
 	if err != nil {
