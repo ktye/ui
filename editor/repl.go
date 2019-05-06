@@ -1,19 +1,14 @@
-package base
-
-/* TODO port to v2
+package editor
 
 import (
 	"image"
-	"image/draw"
 
 	"github.com/eaburns/T/edit"
+	"github.com/ktye/ui/base"
 	"github.com/ktye/ui/paint"
-
-	"golang.org/x/mobile/event/key"
-	"golang.org/x/mobile/event/mouse"
 )
 
-// Repl is like a text editor widget, but sends commands to an interpreter.
+// Repl is a text editor widget, but sends commands to an interpreter.
 type Repl struct {
 	Target **Repl
 	Edit
@@ -24,21 +19,30 @@ type Repl struct {
 
 type Interpreter interface {
 	Eval(string)
-	Cancel()
+	Cancel() // Would be nice to have...
 }
 
+/* rm
 func (r *Repl) Write(p []byte) (n int, err error) {
 	return r.Edit.Write(p)
 }
+*/
 
-func (r *Repl) Layout(w *Window, self *Kid, sizeAvail image.Point, force bool) {
-	if r.Target != nil {
-		*r.Target = r
+func (r *Repl) Draw(dst *image.RGBA, force bool) {
+	if force || r.Edit.Dirty {
+		paint.Border(dst, dst.Rect, base.Yellow) // TODO
+		r.Edit.Draw(dst.SubImage(dst.Rect.Inset(1)).(*image.RGBA), force)
 	}
-	r.Edit.Layout(w, self, sizeAvail.Sub(pt(2)), force)
-	self.R = rect(sizeAvail)
 }
 
+func (r *Repl) Mouse(pos image.Point, but int, dir int, mod uint32) int {
+	return r.Edit.Mouse(pos, but, dir, mod)
+}
+func (r *Repl) Key(rn rune, code uint32, dir int, mod uint32) int {
+	return r.Edit.Key(rn, code, dir, mod)
+}
+
+/*
 func (r *Repl) Draw(w *Window, self *Kid, img draw.Image, orig image.Point, m Mouse, force bool) {
 	hover := m.In(self.R)
 	cs := &w.Primary
@@ -58,6 +62,7 @@ func (r *Repl) Draw(w *Window, self *Kid, img draw.Image, orig image.Point, m Mo
 	self.R = sr
 }
 
+
 // Mouse button 3 executes the current selection or current line.
 // Other mouse events are propagated to the edit widget.
 func (r *Repl) Mouse(w *Window, self *Kid, m Mouse, origM Mouse, orig image.Point) (res Result) {
@@ -72,6 +77,7 @@ func (r *Repl) Mouse(w *Window, self *Kid, m Mouse, origM Mouse, orig image.Poin
 	}
 	return r.Edit.Mouse(w, self, m, origM, orig)
 }
+
 
 // Keys are forwarded to the underlying edit widget, except for special handling of ESC and ENTER.
 // On ENTER the current selected text is interpreted.
@@ -106,6 +112,7 @@ func (r *Repl) Key(w *Window, self *Kid, k key.Event, m Mouse, orig image.Point)
 	self.Draw = Dirty
 	return res
 }
+*/
 
 func (r *Repl) exec() {
 	t := r.Edit.TextBox.Selection()
@@ -133,4 +140,3 @@ func (r *Repl) reply(s string) {
 	}
 	// If we are on the last line, the error is address not found.
 }
-*/
