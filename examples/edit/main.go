@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strconv"
+
 	"github.com/ktye/iv/cmd/lui/apl385"
 	"github.com/ktye/ui"
 	"github.com/ktye/ui/base"
@@ -11,6 +13,7 @@ import (
 func main() {
 	base.SetFont(apl385.TTF(), 20)
 	e := editor.New(text)
+	e.Menu = e.StandardMenu()
 	e.Execute = func(e *editor.Edit, s string) int { println("exec:", s); return 0 } // select and middle click
 	win := ui.New(dpy.New(nil))
 	win.Top = base.Scale{e}
@@ -18,7 +21,15 @@ func main() {
 	<-done
 }
 
-const text = `This is the edit widget.
+var text = `This is the edit widget.
 
-Search text with the right mouse button, execute with the middle.
+Select text with the mouse, press the right button for the menu.
+Execute selected text with the middle button.
+Execute can be programmed to be any action.
 `
+
+func init() {
+	for i := 0; i < 1000; i++ {
+		text = text + "\n" + strconv.Itoa(i)
+	}
+}

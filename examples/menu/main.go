@@ -3,14 +3,14 @@ package main
 import (
 	"fmt"
 
-	"github.com/ktye/iv/cmd/lui/font"
+	"github.com/ktye/iv/cmd/lui/apl385"
 	"github.com/ktye/ui"
 	"github.com/ktye/ui/base"
 	"github.com/ktye/ui/dpy"
 )
 
 func main() {
-	base.SetFont(font.APL385(), 20)
+	base.SetFont(apl385.TTF(), 20)
 	s := make([]string, 1000)
 	for i := range s {
 		s[i] = fmt.Sprintf("this is line number %d", i)

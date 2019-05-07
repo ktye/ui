@@ -110,49 +110,52 @@ func (e *Edit) Draw(dst *image.RGBA, force bool) {
 		e.Base.Rect = dst.Bounds()
 		e.TextBox.Draw(true, dst)
 	}
+	e.DrawMenu(dst)
 }
 
 // Mouse and Key events are adapted from eaburns/T/main.go
 
 func (e *Edit) Mouse(pos image.Point, but int, dir int, mod uint32) int {
+	if r, o := e.MenuMouse(pos, but, dir, mod); o {
+		return r
+	}
+	if but == 3 {
+		if dir >= 0 {
+			return 0
+		}
+		return e.ShowMenu(pos)
+	}
+
 	draw := 0
-	b, dot, dirty := mouseEvent(e.TextBox, pos, but, dir)
+	b, dot, dirty := mouseEvent(e.TextBox, pos.Sub(e.Rect.Min), but, dir)
 	if dirty {
 		draw = 1
 	}
 
-	// Search on Button-3 release:
-	// If Button-3 was moved while being pressed, use the selected text, otherwise use current dot for searching.
-	if b == -2 || b == -3 {
+	if b == -2 && e.Execute != nil {
 		if dot[0] != dot[1] {
 			e.TextBox.SetDot(dot)
 		} else {
 			dot = e.TextBox.Dot()
 		}
-		sel := e.TextBox.Selection()
-		if len(sel) > 0 {
-			if b == -3 { // Search on Button 3
-				t := e.Escape(sel)
-				t = "+/" + t + "/"
-				if err := e.MarkAddr(t); err != nil {
-					fmt.Printf("ui/edit: %s %s", t, err)
-				}
-			} else if b == -2 && e.Execute != nil { // Execute on Button 2
-				if d := e.Execute(e, sel); d != 0 {
-					draw = d
-				}
-			}
+		if d := e.Execute(e, e.TextBox.Selection()); d != 0 {
+			draw = d
 		}
 		if draw == 0 {
 			draw = 1
 		}
 	}
-
 	if draw != 0 {
 		e.Dirty = true
 	}
 	return draw
-
+}
+func (e *Edit) Find() {
+	t := e.Escape(e.TextBox.Selection())
+	t = "+/" + t + "/"
+	if err := e.MarkAddr(t); err != nil {
+		fmt.Printf("ui/edit: %s %s", t, err)
+	}
 }
 
 // Escape a string that it can be inserted/appended with "a/"+string"+"/".
@@ -185,6 +188,9 @@ func mouseEvent(tb *TextBox, pos image.Point, but int, dir int) (int, [2]int64, 
 }
 
 func (e *Edit) Key(r rune, code uint32, dir int, mod uint32) int {
+	if r, o := e.MenuKey(r, code, dir, mod); o {
+		return r
+	}
 	dirKeyCode := map[uint32]bool{
 		79: true, 80: true, 81: true, 82: true, 74: true, 75: true, 77: true, 78: true, // ← → ↓ ↑, ↑↑↑, ↑↑, ↓↓↓, ↓↓
 	}

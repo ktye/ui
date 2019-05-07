@@ -168,7 +168,7 @@ func (b *TextBox) Dotn(n int) [2]int64 {
 // SetDot sets the current selection.
 func (b *TextBox) SetDot(dot [2]int64) {
 	setDot(b, 1, dot[0], dot[1])
-	// showAddr(b, dot[0]) // why is this is not triggered by setDot?
+	showAddr(b, dot[0]) // why is this is not triggered by setDot?
 }
 
 // SetNowrap sets if long lines should be wrapped.
