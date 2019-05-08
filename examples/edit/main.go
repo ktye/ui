@@ -16,7 +16,7 @@ func main() {
 	e.Menu = e.StandardMenu()
 	e.Execute = func(e *editor.Edit, s string) int { println("exec:", s); return 0 } // select and middle click
 	win := ui.New(dpy.New(nil))
-	win.Top = base.Scale{e}
+	win.Top = base.NewScale(e)
 	done := win.Run()
 	<-done
 }

@@ -11,11 +11,11 @@ import (
 	"github.com/golang/freetype/truetype"
 )
 
-var Font = fnt{ttf: nil, size: 13, metrics: basicfont.Face7x13.Metrics(), Face: basicfont.Face7x13}
+var Font = fnt{TTF: nil, size: 13, metrics: basicfont.Face7x13.Metrics(), Face: basicfont.Face7x13}
 
 type fnt struct {
 	font.Face
-	ttf     []byte
+	TTF     []byte
 	size    int
 	metrics font.Metrics
 }
@@ -25,21 +25,22 @@ func (f fnt) Size() int {
 }
 
 func SetFont(ttf []byte, size int) {
+	Font.TTF = ttf
+	Font.Face = LoadFace(ttf, size)
+	Font.size = size
+	Font.metrics = Font.Face.Metrics()
+}
+
+func LoadFace(ttf []byte, size int) font.Face {
 	f, err := truetype.Parse(ttf)
 	if err != nil {
 		panic(err)
 	}
-	Font.ttf = ttf
 	opt := truetype.Options{
 		Size: float64(size),
 		DPI:  72.0,
 	}
-	if opt.Size == 0 {
-		opt.Size = 18
-	}
-	Font.size = size
-	Font.Face = truetype.NewFace(f, &opt)
-	Font.metrics = Font.Face.Metrics()
+	return truetype.NewFace(f, &opt)
 }
 
 func StringSize(s string) image.Point {

@@ -14,7 +14,7 @@ func main() {
 	top := base.NewSplit(base.NewList(strings(12)), base.NewList(strings(100)))
 
 	win = ui.New(dpy.New(nil))
-	win.Top = base.Scale{top}
+	win.Top = base.NewScale(top)
 	done := win.Run()
 	<-done
 }

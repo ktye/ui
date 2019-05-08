@@ -51,7 +51,7 @@ func main() {
 	// TODO: contextmenu with delete
 
 	win = ui.New(dpy.New(nil))
-	win.Top = base.Scale{&l}
+	win.Top = base.NewScale(&l)
 	done := win.Run()
 	<-done
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/ktye/ui"
-	"github.com/ktye/ui/base"
 	"github.com/ktye/ui/dpy"
 	"github.com/ktye/ui/editor"
 )
@@ -14,7 +13,7 @@ func main() {
 	repl.Interp = &interp
 
 	win := ui.New(dpy.New(nil))
-	win.Top = &base.Scale{repl}
+	win.Top = repl
 	done := win.Run()
 	<-done
 }

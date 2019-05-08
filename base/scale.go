@@ -10,8 +10,12 @@ import (
 // It can be used to wrap the top widget.
 type Scale struct {
 	ui.Widget
+	Funcs []func() // custom notification after font reset
 }
 
+func NewScale(w ui.Widget) Scale {
+	return Scale{Widget: w}
+}
 func (s Scale) Draw(dst *image.RGBA, force bool) {
 	s.Widget.Draw(dst, force)
 }
@@ -19,9 +23,11 @@ func (s Scale) Mouse(pos image.Point, but int, dir int, mod uint32) int {
 	if mod&1 != 0 {
 		if but == -1 {
 			scale(true)
+			s.notify()
 			return -1
 		} else if but == -2 {
 			scale(false)
+			s.notify()
 			return -1
 		}
 	}
@@ -31,10 +37,18 @@ func (s Scale) Key(r rune, code uint32, dir int, mod uint32) int {
 	return s.Widget.Key(r, code, dir, mod)
 }
 
+func (s Scale) notify() {
+	if s.Funcs != nil {
+		for _, f := range s.Funcs {
+			f()
+		}
+	}
+}
+
 // Scale is the callback for shift-wheel up/down.
 // It changes the font size.
 func scale(up bool) {
-	if Font.ttf == nil {
+	if Font.TTF == nil {
 		return
 	}
 	if up {
@@ -44,5 +58,5 @@ func scale(up bool) {
 	} else {
 		Font.size--
 	}
-	SetFont(Font.ttf, Font.size)
+	SetFont(Font.TTF, Font.size)
 }

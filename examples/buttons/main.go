@@ -52,7 +52,7 @@ func main() {
 	bar := base.NewButtonBar(&panel{}, textButtons)
 	bar.Target = &bp
 	win = ui.New(dpy.New(nil))
-	win.Top = base.Scale{bar}
+	win.Top = base.NewScale(bar)
 	base.SetFont(apl385.TTF(), 20)
 	done := win.Run()
 	<-done

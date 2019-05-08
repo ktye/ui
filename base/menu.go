@@ -46,6 +46,10 @@ func (m *Menu) drawMenu(dst *image.RGBA) {
 	m.ButtonBar.Draw(dst.SubImage(r).(*image.RGBA), true)
 }
 func (m *Menu) mouse(pos image.Point, but int, dir int, mod uint32) int {
+	if but == 3 && dir < 0 { // button 3 release → close menu
+		m.active = false
+		return 1
+	}
 	if !pos.In(m.ButtonBar.Base.Rect) && but == 1 && dir < 0 { // but-1-click outside → close menu
 		m.active = false
 		return 1

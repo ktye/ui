@@ -35,7 +35,7 @@ func main() {
 	l.Menu = base.NewMenu(m)
 
 	win := ui.New(dpy.New(nil))
-	win.Top = base.Scale{l}
+	win.Top = base.NewScale(l)
 	done := win.Run()
 	<-done
 }

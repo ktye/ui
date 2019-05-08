@@ -14,7 +14,7 @@ var win *ui.Window
 
 func main() {
 	win = ui.New(dpy.New(nil))
-	win.Top = base.Scale{&basic{}}
+	win.Top = base.NewScale(&basic{})
 	done := win.Run()
 	<-done
 }

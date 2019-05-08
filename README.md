@@ -3,7 +3,7 @@
 ## Simple widget interface (no dependency except image & image.draw)
 ```go
 type Widget interface {
-	Draw(dst draw.Image, force bool)
+	Draw(dst *image.RGBA, force bool)
 	Mouse(pos image.Point, but int, dir int, mod uint32) int
 	Key(r rune, code uint32, dir int, mod uint32) int
 }
@@ -33,7 +33,7 @@ func main() {
 // A basic widget.
 type basic struct{}
 
-func (b *basic) Draw(dst draw.Image, force bool) {
+func (b *basic) Draw(dst *image.RGBA, force bool) {
 	println("draw", force)
 	if force {
 		draw.Draw(dst, dst.Bounds(), &image.Uniform{color.RGBA{0xFF, 0x00, 0xFF, 0xFF}}, image.ZP, draw.Src)
