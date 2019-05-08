@@ -7,7 +7,7 @@ require (
 	github.com/eaburns/T v0.0.0-20190217122806-dbc7887ff15c
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/ktye/iv v0.0.0-20190506155233-ea1af1e66e83
-	github.com/ktye/plot v0.0.0-20190418145510-8e0ab7910c77
+	github.com/ktye/plot v0.0.0-20190508121725-619e116aa2cf
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
 	github.com/soniakeys/quant v1.0.0 // indirect
 	golang.org/x/exp v0.0.0-20190417140011-e40e924fdd3f

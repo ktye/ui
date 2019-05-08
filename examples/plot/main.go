@@ -1,31 +1,24 @@
 package main
 
 import (
-	"fmt"
-
+	"github.com/ktye/iv/cmd/lui/apl385"
 	"github.com/ktye/plot"
 	"github.com/ktye/ui"
+	"github.com/ktye/ui/base"
+	"github.com/ktye/ui/dpy"
 )
 
 func main() {
-	p := &ui.Plot{}
-	p.SetPlots(xyplot())
-	w := ui.New(nil)
-	w.Top.W = p
-	w.Render()
+	base.SetFont(apl385.TTF(), 20)
+	setPlotFont()
 
-	for {
-		select {
-		case e := <-w.Inputs:
-			w.Input(e)
+	scl := base.NewScale(plot.NewUI(xyplot()))
+	scl.Funcs = append(scl.Funcs, setPlotFont)
 
-		case err, ok := <-w.Error:
-			if !ok {
-				return
-			}
-			fmt.Println("ui:", err)
-		}
-	}
+	win := ui.New(dpy.New(nil))
+	win.Top = scl
+	done := win.Run()
+	<-done
 }
 
 func xyplot() plot.Plots {
@@ -46,4 +39,20 @@ func xyplot() plot.Plots {
 			l([]float64{2, 1, 1, 4, 2}),
 		},
 	}}
+}
+
+// The plot widget is implemented externally.
+// It does it's own font handling and is notified when the ui font changes size (mouse wheel).
+func setPlotFont() {
+	s1 := base.Font.Size()
+	s2 := (s1 * 8) / 10
+	if s1 < 6 {
+		s1 = 6
+	}
+	if s2 < 6 {
+		s2 = 6
+	}
+	f1 := base.LoadFace(base.Font.TTF, s1)
+	f2 := base.LoadFace(base.Font.TTF, s2)
+	plot.SetFonts(f1, f2)
 }
