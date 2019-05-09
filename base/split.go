@@ -15,7 +15,8 @@ type Split struct {
 	Kids        [2]Kid
 	size        int
 	rect        image.Rectangle
-	drag        bool
+	drag, start bool
+	store       *image.RGBA
 	other       bool
 	gutterClick image.Point
 }
@@ -25,12 +26,13 @@ func NewSplit(kid1, kid2 ui.Widget) *Split {
 	s.Kids = [2]Kid{Kid{Widget: kid1}, Kid{Widget: kid2}}
 	return &s
 }
+
 func (s *Split) Draw(dst *image.RGBA, force bool) {
 	if s.Target != nil {
 		*s.Target = s
 	}
 	s.Rect = dst.Rect
-	if force == false && s.Dirty == false {
+	if force == false && s.Dirty == false { // a kid might have requested a self draw.
 		s.Kids[0].Draw(dst, force)
 		s.Kids[1].Draw(dst, force)
 		return
@@ -57,13 +59,24 @@ func (s *Split) Draw(dst *image.RGBA, force bool) {
 		s.Kids[1].Rectangle = dst.Rect.Intersect(dst.Rect.Add(image.Point{0, a + 1}))
 		s.rect = image.Rect(dst.Rect.Min.X, dst.Rect.Min.Y+a-1, dst.Rect.Max.X, dst.Rect.Min.Y+a+1)
 	}
-	s.Kids[0].Draw(dst, true)
-	s.Kids[1].Draw(dst, true)
-	c := SplitGutter
-	if s.drag {
-		c = SplitGutterActive
+	if s.drag == false { // Don't redraw kids while dragging the splitter for performance reasons of slow drawing widgets.
+		s.Kids[0].Draw(dst, true)
+		s.Kids[1].Draw(dst, true)
+		s.store = nil
 	}
-	draw.Draw(dst, s.rect, c.Uniform(), image.ZP, draw.Src)
+	c := SplitGutter
+	if s.drag { // On drag start, store the current image and repaint the it with the new splitter.
+		c = SplitGutterActive
+		if s.start {
+			s.store = image.NewRGBA(dst.Rect)
+			draw.Draw(s.store, dst.Rect, dst, dst.Rect.Min, draw.Src) // store
+			s.start = false
+		}
+	}
+	if r := dst.Rect; s.store != nil && r == s.store.Rect {
+		draw.Draw(dst, r, s.store, r.Min, draw.Src) // repaint
+	}
+	draw.Draw(dst, s.rect, c.Uniform(), image.ZP, draw.Src) // draw current splitter
 }
 func (s *Split) Mouse(pos image.Point, but int, dir int, mod uint32) int {
 	gutter := s.rect
@@ -72,6 +85,7 @@ func (s *Split) Mouse(pos image.Point, but int, dir int, mod uint32) int {
 	if pos.In(gutter) && but == 1 && dir > 0 { // but-1 click in gutter → start drag or flip
 		s.gutterClick = pos
 		s.drag = true
+		s.start = true
 		return s.DrawSelf()
 	} else if but == 1 && dir < 0 { // but-1 release: stop drag/flip
 		if s.drag {

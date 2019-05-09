@@ -4,7 +4,6 @@ package ui
 import (
 	"image"
 	"io"
-	"time"
 )
 
 func New(d Display) *Window {
@@ -49,13 +48,11 @@ type Widget interface {
 func (w *Window) Run() chan bool {
 	w.Draw(true)
 	done := make(chan bool)
-	ms := make(chan mt)
-	go ratedown(ms, w.mouse)
 	go func() {
 		for {
 			draw := 0
 			select {
-			case m := <-ms: //<-w.mouse:
+			case m := <-w.mouse:
 				draw = w.Top.Mouse(m.Pos, m.But, m.Dir, m.Mod)
 			case k := <-w.key:
 				draw = w.Top.Key(k.Rune, k.Code, k.Dir, k.Mod)
@@ -85,20 +82,6 @@ func (w *Window) Draw(force bool) {
 	w.Top.Draw(w.dst, force)
 	w.Unlock()
 	w.Flush()
-}
-func ratedown(dst chan mt, src <-chan mt) { // rate down mouse drag events
-	var last time.Time
-	short := 100 * time.Millisecond
-	for {
-		select {
-		case m := <-src:
-			if m.But == 0 && m.Dir == 0 && time.Since(last) < short {
-			} else {
-				last = time.Now()
-				dst <- m
-			}
-		}
-	}
 }
 
 type mt = struct {
