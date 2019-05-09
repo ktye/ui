@@ -25,7 +25,6 @@ func (m *Menu) drawMenu(dst *image.RGBA) {
 	if m.active == false {
 		return
 	}
-	//m.active = false
 	s := m.ButtonBar.MenuSize()
 	dr := dst.Bounds()
 	r := image.Rectangle{Min: m.point, Max: m.point.Add(s)}.Sub(image.Point{Font.size, Font.size})

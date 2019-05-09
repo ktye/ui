@@ -33,13 +33,21 @@ func (b *Base) DrawMenu(dst *image.RGBA) {
 }
 func (b *Base) MenuMouse(pos image.Point, but int, dir int, mod uint32) (int, bool) {
 	if b.Menu != nil && b.Menu.active {
-		return b.Menu.mouse(pos, but, dir, mod), true
+		r, o := b.Menu.mouse(pos, but, dir, mod), true
+		if o && r != 0 {
+			b.Dirty = true
+		}
+		return r, o
 	}
 	return 0, false
 }
 func (b *Base) MenuKey(r rune, code uint32, dir int, mod uint32) (int, bool) {
 	if b.Menu != nil && b.Menu.active {
-		return b.Menu.key(r, code, dir, mod), true
+		r, o := b.Menu.key(r, code, dir, mod), true
+		if o && r != 0 {
+			b.Dirty = true
+		}
+		return r, o
 	}
 	return 0, false
 }

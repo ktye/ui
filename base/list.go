@@ -149,13 +149,12 @@ func (l *List) Mouse(pos image.Point, but int, dir int, mod uint32) int {
 		l.top += 5
 		return l.setcur()
 	case 3:
-		if dir > 0 {
-			if mod&1 != 0 { // shift+right-click → unselect all
-				l.Sel = make([]bool, len(l.List))
-				return l.DrawSelf()
-			} else if l.Menu != nil { // right-click or long-press → menu
-				return l.ShowMenu(pos)
-			}
+		if dir > 0 && mod&1 != 0 { // shift+right-click → unselect all
+			l.Sel = make([]bool, len(l.List))
+			return l.DrawSelf()
+		}
+		if dir < 0 { // right-click or long-press → menu
+			return l.ShowMenu(pos)
 		}
 	}
 	return 0

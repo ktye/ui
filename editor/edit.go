@@ -109,6 +109,7 @@ func (e *Edit) Draw(dst *image.RGBA, force bool) {
 	if force || dst.Bounds() != e.Base.Rect || e.Dirty {
 		e.Base.Rect = dst.Bounds()
 		e.TextBox.Draw(true, dst)
+		e.Dirty = false
 	}
 	e.DrawMenu(dst)
 }
@@ -123,7 +124,9 @@ func (e *Edit) Mouse(pos image.Point, but int, dir int, mod uint32) int {
 		if dir >= 0 {
 			return 0
 		}
-		return e.ShowMenu(pos)
+		if dir < 0 {
+			return e.ShowMenu(pos)
+		}
 	}
 
 	draw := 0
