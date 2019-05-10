@@ -7,6 +7,8 @@ github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 h1:DACJavvAHhabrF0
 github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0/go.mod h1:E/TSTwGwJL78qG/PmXZO1EjYhfJinVAhrmmHX6Z8B9k=
 github.com/ktye/plot v0.0.0-20190509161151-d7e083f03c72 h1:XI3TJ7+GkuM3Jw1ym6JMnQ9i2U5SxUEQoCVQGxld8r0=
 github.com/ktye/plot v0.0.0-20190509161151-d7e083f03c72/go.mod h1:pCmVLJ22Fj9q6zZ7FutowrJY3N3ZcWKv0e0nObHoIe0=
+github.com/ktye/plot v0.0.0-20190510151038-754a73afa0e8 h1:R7krLOabj4MyUlkInic8ZAP1oGJ3PylaJwzuAGRy3mU=
+github.com/ktye/plot v0.0.0-20190510151038-754a73afa0e8/go.mod h1:pCmVLJ22Fj9q6zZ7FutowrJY3N3ZcWKv0e0nObHoIe0=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/exp v0.0.0-20190306152737-a1d7652674e8/go.mod h1:CJ0aWSM057203Lf6IL+f9T1iT9GByDxfZKAQTCR3kQA=
 golang.org/x/exp v0.0.0-20190510051728-0e2d8f6bf8da h1:PImg9IT8yoy5/CXuPKtI1riZqk9Li72MvdYVkkbyJ8g=
