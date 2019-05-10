@@ -1,5 +1,7 @@
 package main
 
+func main() {}
+
 /* TODO port to v2
 
 import (

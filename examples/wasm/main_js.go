@@ -7,10 +7,10 @@ import (
 	"image/color"
 	"image/draw"
 
-	"github.com/ktye/iv/cmd/lui/font"
 	"github.com/ktye/ui"
 	"github.com/ktye/ui/base"
 	"github.com/ktye/ui/dpw"
+	"github.com/ktye/ui/fonts/apl385"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
@@ -45,8 +45,8 @@ func main() {
 	bar := base.NewButtonBar(&basic{}, textButtons)
 	bar.Target = &bp
 	win := ui.New(dpw.New("dpy"))
-	win.Top = base.Scale{bar}
-	base.SetFont(font.APL385(), 20)
+	win.Top = base.NewScale(bar)
+	base.SetFont(apl385.TTF(), 20)
 	done := win.Run()
 	<-done
 

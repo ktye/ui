@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 
-	"github.com/ktye/iv/cmd/lui/apl385"
 	"github.com/ktye/ui"
 	"github.com/ktye/ui/base"
 	"github.com/ktye/ui/dpy"
+	"github.com/ktye/ui/fonts/apl385"
 )
 
 var win *ui.Window
