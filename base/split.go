@@ -18,6 +18,7 @@ type Split struct {
 	drag, start bool
 	store       *image.RGBA
 	other       bool
+	swap        bool
 	gutterClick image.Point
 }
 
@@ -82,6 +83,18 @@ func (s *Split) Mouse(pos image.Point, but int, dir int, mod uint32) int {
 	gutter := s.rect
 	gutter.Min = gutter.Min.Sub(image.Point{2, 2})
 	gutter.Max = gutter.Max.Add(image.Point{2, 2})
+
+	if but == 3 { // right click on the gutter → swap kids
+		if pos.In(gutter) && dir > 0 {
+			s.swap = true // markswap
+			return 0
+		} else if dir < 0 && s.swap {
+			s.swap = false
+			s.Kids[0], s.Kids[1] = s.Kids[1], s.Kids[0]
+			return s.DrawSelf()
+		}
+	}
+
 	if pos.In(gutter) && but == 1 && dir > 0 { // but-1 click in gutter → start drag or flip
 		s.gutterClick = pos
 		s.drag = true
