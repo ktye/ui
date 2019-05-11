@@ -1,6 +1,6 @@
 # ui - go gui toolkit
 
-## Simple widget interface (no dependency except image & image.draw)
+## Simple widget interface (image is the only package dependency)
 ```go
 type Widget interface {
 	Draw(dst *image.RGBA, force bool)
@@ -8,6 +8,20 @@ type Widget interface {
 	Key(r rune, code uint32, dir int, mod uint32) int
 }
 ```
+
+## The display backend needs to provide this interface
+```go
+type Display interface {
+	Image() chan *image.RGBA
+	Mouse() chan struct{Pos image.Point, But, Dir int, Mod uint32},
+	Key()   chan struct{Rune rune, Code uint32, Dir int, Mod uint32},
+	Err()   char error
+	Flush()
+	Lock()
+	Unlock()
+}
+```
+Package dpy provides an implementation based on shiny.
 
 ## Basic example with a single widget
 ```go
@@ -19,13 +33,15 @@ import (
 	"image/draw"
 
 	"github.com/ktye/ui"
+	"github.com/ktye/ui/base" 
+	"github.com/ktye/ui/dpy"  // shiny backend
 )
 
 var win *ui.Window
 
 func main() {
 	win = ui.New(dpy.New(nil))
-	win.Top = &basic{}
+	win.Top = base.NewScale(&basic{})
 	done := win.Run()
 	<-done
 }
@@ -42,7 +58,7 @@ func (b *basic) Draw(dst *image.RGBA, force bool) {
 func (b *basic) Mouse(pos image.Point, but int, dir int, mod uint32) int {
 	println("mouse", but)
 	if but == 1 && dir > 0 {
-		return 1 // Return 1 to request a redraw
+		return 1
 	}
 	return 0
 }
