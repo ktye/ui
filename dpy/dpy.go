@@ -138,6 +138,7 @@ func (d *Display) loop() {
 		}
 	}(resize)
 
+	var lastX, lastY float32
 	for {
 		switch e := w.NextEvent().(type) {
 		case lifecycle.Event:
@@ -163,6 +164,14 @@ func (d *Display) loop() {
 			dir := int(e.Direction)
 			if e.Direction == mouse.DirRelease {
 				dir = -1
+			}
+			// On win32 when not on the primary monitor, wheel event position is wrong.
+			// No idea how to fix that in shiny. ScreenToClient seems not to be enough.
+			// We store the last non-wheel position instead. Some widgets rely on this to work correctly (e.g. split).
+			if e.Button < 0 {
+				e.X, e.Y = lastX, lastY
+			} else {
+				lastX, lastY = e.X, e.Y
 			}
 			d.mouse <- mt{
 				Pos: image.Point{X: int(e.X), Y: int(e.Y)},
