@@ -6,6 +6,9 @@ import (
 	"time"
 )
 
+// List is widget for a list box.
+// The data is passed as slice of Stringers. Each entry must provide at least a String method.
+// An entry may additionaly implement a Color method.
 type List struct {
 	Base
 	Target    **List
