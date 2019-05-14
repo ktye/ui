@@ -24,6 +24,8 @@ func (w *Widget) setCaption(p plot.Plots) {
 	if err != nil {
 		return
 	}
+	w.UI.HighlightCaption = func(id int) { w.List.SelectSingle(id + off) }
+	w.List.SelChanged = w.selchanged(off)
 	white := &image.Uniform{color.White}
 	var colors []base.Colorset
 	colorm := make(map[color.RGBA]int)
@@ -59,6 +61,16 @@ func (w *Widget) CaptionStrings() ([]string, int, error) {
 			s = s[:len(s)-1]
 		}
 		return s, lineOffset, nil
+	}
+}
+func (w *Widget) selchanged(off int) func() {
+	return func() {
+		s := w.List.Selection()
+		hi := make([]plot.HighlightID, len(s))
+		for i := range s {
+			hi[i] = plot.HighlightID{Line: s[i] - off, Point: -1}
+		}
+		w.UI.Highlight(hi)
 	}
 }
 

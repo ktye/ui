@@ -32,6 +32,8 @@ func New(p plt.Plots) *Widget {
 func (w *Widget) SetPlots(p plt.Plots) {
 	w.UI.SetPlots(p)
 	w.c = nil
+	w.UI.HighlightCaption = nil
+	w.List.SelChanged = nil
 	w.setCaption(p)
 	w.Split.Dirty = true
 }
