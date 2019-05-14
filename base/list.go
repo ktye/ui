@@ -11,13 +11,14 @@ import (
 // An entry may additionaly implement a Color method.
 type List struct {
 	Base
-	Target    **List
-	Execute   func() int // double-click or Enter callback
-	Delete    func() int // callback for del key
-	List      []Stringer // list entries
-	Colorsets []Colorset // custom colorsets, list entries may have a Color() int method
-	Sel       []bool     // #List
-	Single    bool       // single selection
+	Target     **List
+	Execute    func() int // double-click or Enter callback
+	Delete     func() int // callback for del key
+	SelChanged func()     // callback after a selection changed (with mouse/key events)
+	List       []Stringer // list entries
+	Colorsets  []Colorset // custom colorsets, list entries may have a Color() int method
+	Sel        []bool     // #List
+	Single     bool       // single selection
 
 	top, cur  int
 	pagesize  int // number of visible lines
@@ -41,6 +42,15 @@ func (l *List) Selection() (r []int) {
 		}
 	}
 	return
+}
+func (l *List) SelectSingle(line int) { // Select a single line, set to current, scroll to view.
+	l.Sel = make([]bool, len(l.List))
+	l.cur = 0
+	if line >= 0 && line < len(l.Sel) {
+		l.Sel[line] = true
+		l.cur = line
+	}
+	l.setview()
 }
 
 func (l *List) Draw(dst *image.RGBA, force bool) {
@@ -130,6 +140,7 @@ func (l *List) Mouse(pos image.Point, but int, dir int, mod uint32) int {
 				if n >= 0 && n < len(l.List) {
 					l.cur = n
 					l.toggle()
+					l.selchanged() // called 2x during a dbl-click (should be 0x)
 				}
 			}
 			l.clickLine = 0
@@ -142,6 +153,7 @@ func (l *List) Mouse(pos image.Point, but int, dir int, mod uint32) int {
 			l.dbl = t
 		} else if dir < 0 && l.drag {
 			l.clickLine = 0
+			l.selchanged()
 		}
 		l.drag = false
 		return l.DrawSelf()
@@ -169,30 +181,32 @@ func (l *List) Key(r rune, code uint32, dir int, mod uint32) int {
 	if len(l.List) == 0 {
 		return 0
 	}
+	toggle := func() { l.toggle(); l.selchanged() }
+	toggleNext := func(n int) { l.toggleNext(n); l.selchanged() }
 	if dir >= 0 {
 		switch code {
 		case 81: // ↓
 			if mod&1 != 0 {
-				l.toggle()
+				toggle()
 			}
 			l.cur++
 			return l.setview()
 		case 82: // ↑
 			if mod&1 != 0 {
-				l.toggle()
+				toggle()
 			}
 			l.cur--
 			return l.setview()
 		case 75: // ↑↑
 			if mod&1 != 0 {
-				l.toggleNext(-l.pagesize - 1)
+				toggleNext(-l.pagesize - 1)
 			} else {
 				l.cur -= l.pagesize - 1
 			}
 			return l.setview()
 		case 78: // ↓↓
 			if mod&1 != 0 {
-				l.toggleNext(l.pagesize - 1)
+				toggleNext(l.pagesize - 1)
 			} else {
 				l.cur += l.pagesize - 1
 			}
@@ -203,6 +217,7 @@ func (l *List) Key(r rune, code uint32, dir int, mod uint32) int {
 					l.cur--
 					l.toggle()
 				}
+				l.selchanged()
 			}
 			l.cur = 0
 			return l.setview()
@@ -212,11 +227,12 @@ func (l *List) Key(r rune, code uint32, dir int, mod uint32) int {
 					l.cur++
 					l.toggle()
 				}
+				l.selchanged()
 			}
 			l.cur = len(l.List) - 1
 			return l.setview()
 		case 44: // space → toggle
-			l.toggle()
+			toggle()
 			return l.DrawSelf()
 		case 40: // enter → execute
 			if l.Execute != nil {
@@ -228,12 +244,18 @@ func (l *List) Key(r rune, code uint32, dir int, mod uint32) int {
 					for i := range l.Sel {
 						l.Sel[i] = true
 					}
+					l.selchanged()
 					return l.DrawSelf()
 				}
 			}
 		}
 	}
 	return 0
+}
+func (l *List) selchanged() {
+	if l.SelChanged != nil {
+		l.SelChanged()
+	}
 }
 func (l *List) setview() int { // set view after changing cur
 	if l.cur >= len(l.List) {
