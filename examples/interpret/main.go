@@ -24,14 +24,9 @@ var rpl *editor.Repl
 var edt *editor.Edit
 var cnv ui.Widget
 var sp1, sp2 *base.Split
-
-var ipr interp
 var kt map[v]v
-var cnt func(v) v
-var atx func(v, v) v
-var lnx func(v) int
-var til func(v) v
-var cst func(v, v) v
+var ik k
+var iv apl
 
 func main() {
 	base.SetFont(apl385.TTF(), 20)
@@ -39,7 +34,6 @@ func main() {
 	rpl.Edit.SetText(rope.New(" "))
 	rpl.Execute = func(_ *editor.Edit, s string) int { rpl.DefaultExec(nil, s); return -1 }
 	rpl.Nowrap = true
-	rpl.Interp = &ipr
 	rpl.Menu = rplmenu(rpl)
 
 	edt = editor.New("")
@@ -53,16 +47,9 @@ func main() {
 	sp1.Vertical = true
 	sp1.Ratio = 1
 
-	kt = kinit()
-	cnt = kt["#:"].(func(v) v)
-	atx = kt["@@"].(func(v, v) v)
-	lnx = kt["ln"].(func(v) int)
-	til = kt["!:"].(func(v) v)
-	cst = kt["$$"].(func(v, v) v)
-
-	p := kt["plot"].(plot.Plot)
-	p.Style.Dark = false
-	kt["plot"] = p
+	ik = kinit()
+	iv = ivinit()
+	rpl.Interp = ik
 
 	win = ui.New(dpy.New(&screen.NewWindowOptions{Title: "i"})) // win7 confuses iota and quad.
 
@@ -95,24 +82,6 @@ func isplot(x v) (plot.Plots, bool) {
 	return nil, false
 }
 
-func (i *interp) Eval(s string) string {
-	s = plumb(s)
-	x := run(s, kt)
-	if x != nil {
-		s, o := x.(string)
-		if !o {
-			if p, o := isplot(x); o {
-				setplot(p)
-				return ""
-			} else {
-				s = fmt(x).(string)
-			}
-		}
-		return s
-	}
-	return ""
-}
-
 func rplmenu(r *editor.Repl) *base.Menu {
 	kval := func() v {
 		s := r.Selection()
@@ -140,8 +109,21 @@ func rplmenu(r *editor.Repl) *base.Menu {
 		println("TODO show")
 		return 0
 	})
+	var b *base.Button
+	apljk := base.NewButton("k→APL", "", func() int {
+		if b.Text == "k→APL" {
+			b.Text = "APL→k"
+			rpl.Interp = ik
+		} else {
+			b.Text = "k→APL"
+			rpl.Interp = iv
+		}
+		return -1
+	})
+	apljk.Target = &b
+
 	m := r.StandardMenu()
-	m.Buttons = append(m.Buttons, edit, show)
+	m.Buttons = append(m.Buttons, edit, show, apljk)
 	return m
 }
 func evlbutton(e *editor.Edit) { // add a run menu entry to the editor

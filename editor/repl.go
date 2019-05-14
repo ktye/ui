@@ -34,6 +34,8 @@ func (r *Repl) Draw(dst *image.RGBA, force bool) {
 			dst = dst.SubImage(dst.Rect.Inset(1)).(*image.RGBA)
 		}
 		r.Edit.Draw(dst, force)
+	} else {
+		r.DrawMenu(dst)
 	}
 }
 

@@ -8,7 +8,6 @@ import (
 func regplot(a map[v]v) {
 	p := plot.Plot{}
 	setPlotFonts()
-	p.Style.Dark = true
 	a["plot"] = p
 	a["line"] = plot.Line{}
 	a["plots"] = plots
