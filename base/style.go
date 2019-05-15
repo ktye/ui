@@ -49,10 +49,11 @@ func StringSize(s string) image.Point {
 	return image.Point{dx, dy}
 }
 
-func String(dst *image.RGBA, at image.Point, s string) {
+func String(dst *image.RGBA, at image.Point, s string) int {
 	f := Font.Face
 	fg := Colors[0]
 	dot := fixed.P(dst.Rect.Min.X, dst.Rect.Min.Y).Add(fixed.P(at.X, at.Y)).Add(fixed.Point26_6{0, Font.metrics.Ascent})
+	start := dot.X
 	b := rune(-1)
 	for _, c := range s {
 		if c == '\n' || c == '\t' {
@@ -62,7 +63,7 @@ func String(dst *image.RGBA, at image.Point, s string) {
 			dot.X += f.Kern(b, c)
 		}
 		if dot.X.Ceil() > dst.Rect.Max.X {
-			return
+			break
 		}
 		dr, m, p, a, ok := f.Glyph(dot, c)
 		if !ok {
@@ -72,6 +73,7 @@ func String(dst *image.RGBA, at image.Point, s string) {
 		dot.X += a
 		b = c
 	}
+	return (start - dot.X).Ceil()
 }
 
 type Colorset [2]*image.Uniform
