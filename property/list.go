@@ -73,18 +73,54 @@ func (l *List) init() {
 			entries[i] = e
 		}
 	}
+	entries = append(entries, listerror{})
 
 	l.List = &base.List{
 		List:   entries,
 		Single: true,
 		Colorsets: []base.Colorset{
 			base.Colorset{base.LightGrey.Uniform(), base.White.Uniform()}, // disabled
-			base.Colorset{base.Black.Uniform(), base.White.Uniform()},     // normal
 			base.Colorset{base.Red.Uniform(), base.Red.Uniform()},         // password
+			base.Colorset{base.Red.Uniform(), base.White.Uniform()},       // error
 		},
-		// TODO: Execute: enable disabled, fields, edit values?
-		// TODO: Delete: clear slices, ZeroString for values?
+		Execute: l.edit,
+		Delete:  l.clear,
 	}
+}
+func (l *List) selection() int { // single selection index, substract header and error
+	sel := l.List.Selection()
+	if len(sel) > 0 && sel[0] == 0 {
+		sel = sel[1:]
+	}
+	if len(sel) < 1 {
+		return -1
+	}
+	if sel[0] == len(l.List.List)-1 {
+		return -1
+	}
+	return sel[0] - 1
+}
+func (l *List) clear() int {
+	i := l.selection()
+	if i < 0 {
+		return 0
+	}
+	p := l.list.Fields[i]
+	if p.IsSlice {
+		l.list.Fields[i].Values = nil
+	}
+	return l.update(l.list)
+}
+func (l *List) update(ps list) int {
+	d := data{l.Data}
+	err := d.update(ps)
+	l.List.List[len(l.List.List)-1] = listerror{err}
+	return -1
+}
+func (l *List) edit() int {
+	// TODO: toggle bool, show menu for popups, edit strings, …
+	println("TODO: list edit")
+	return 0
 }
 
 func (p property) nablas() []string {
@@ -111,20 +147,32 @@ func (e entry) String() string {
 }
 func (e entry) Color() int {
 	if !e.p.IsUnique {
-		return 0 // grey (disabled)
+		return 1 // grey (disabled)
 	} else if e.p.IsPassword {
 		return 2 // white on white
 	}
-	return 1
+	return 0
 }
 
+type listerror struct {
+	error
+}
+
+func (e listerror) String() string {
+	if e.error == nil {
+		return ""
+	}
+	return e.error.Error()
+}
+func (e listerror) Color() int { return 3 }
+
 func (l *List) Draw(dst *image.RGBA, force bool) {
+	if l.err == nil && l.List == nil {
+		l.init()
+	}
 	if l.err != nil {
 		l.err.Draw(dst, force)
 		return
-	}
-	if l.List == nil {
-		l.init()
 	}
 	l.List.Draw(dst, force)
 }

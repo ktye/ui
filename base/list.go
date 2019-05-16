@@ -147,7 +147,8 @@ func (l *List) Mouse(pos image.Point, but int, dir int, mod uint32) int {
 			t := time.Now()
 			if t.Sub(l.dbl) < 500*time.Millisecond {
 				if l.Execute != nil {
-					l.Execute()
+					l.SelectSingle(line())
+					return l.Execute()
 				}
 			}
 			l.dbl = t
@@ -249,6 +250,9 @@ func (l *List) Key(r rune, code uint32, dir int, mod uint32) int {
 				}
 			}
 		}
+	}
+	if dir < 0 && code == 76 && l.Delete != nil { // delete
+		return l.Delete()
 	}
 	return 0
 }

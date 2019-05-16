@@ -68,7 +68,8 @@ type data struct {
 type Source interface {
 	GetAll(string) ([]string, error)
 	GetOptions(string) ([]string, error)
-	Rename(reflect.Value, string)
+	RenameID(reflect.Value, string) error
+	DeleteID(reflect.Value) error
 	PreUpdate()
 	PostUpdate()
 }
@@ -304,7 +305,9 @@ func (d data) update(ps list) error {
 					if isNew == false {
 						old := reflect.New(fieldValue.Type()).Elem()
 						old.Set(fieldValue)
-						d.src.Rename(old, newName)
+						if err := d.src.RenameID(old, newName); err != nil {
+							return err
+						}
 					}
 				}
 				if err := p.set(fieldValue); err != nil {
@@ -593,6 +596,59 @@ func (d data) newDataStructValue(dataFieldName string) (reflect.Value, int, bool
 	}
 }
 
+// swapSliceElements swaps two slice elements of a primary data struct.
+func (d data) swapSliceElements(dataFieldName string, i, j int) error {
+	slice := reflect.ValueOf(d.src).Elem().FieldByName(dataFieldName)
+	if slice.Kind() != reflect.Slice {
+		return fmt.Errorf("property: swap: struct field '%s' is not a slice", dataFieldName)
+	}
+	l := slice.Len()
+	if i < 0 || j < 0 || i >= l || j >= l {
+		return fmt.Errorf("property: swap: s '%s': index out of range", dataFieldName)
+	}
+	tmp := reflect.New(slice.Type().Elem()).Elem()
+	tmp.Set(slice.Index(i))
+	slice.Index(i).Set(slice.Index(j))
+	slice.Index(j).Set(tmp)
+	return nil
+}
+
+// deleteSliceElements delete the element at the given index of a primary data struct.
+func (d data) deleteSliceElement(dataFieldName string, i int) error {
+	slice := reflect.ValueOf(d.src).Elem().FieldByName(dataFieldName)
+	if slice.Kind() != reflect.Slice {
+		return fmt.Errorf("property: delete %s[%d]; not a slice", dataFieldName, i)
+	}
+	if i < 0 {
+		return fmt.Errorf("property: delete %s[%d]", dataFieldName, i)
+	}
+	n := slice.Len()
+	if i >= n {
+		return fmt.Errorf("property: delete %s[%d] >= len", dataFieldName, i)
+	}
+
+	// notify DeleteID
+	e := slice.Index(i)
+	if e.Kind() != reflect.Struct {
+		return fmt.Errorf("property: delete %s[%d]: not a struct", dataFieldName, i)
+	}
+	var zv reflect.Value
+	namefield := e.FieldByName("Name")
+	if namefield != zv {
+		if err := d.src.DeleteID(namefield); err != nil {
+			return err
+		}
+	}
+
+	if i == n-1 {
+		slice.SetLen(n - 1)
+	} else {
+		newSlice := reflect.AppendSlice(slice.Slice(0, i), slice.Slice(i+1, n))
+		slice.Set(newSlice)
+	}
+	return nil
+}
+
 func (d data) propertyTypeInfo(dataStruct reflect.Value, fieldname string) (property, error) {
 	p := property{
 		FieldName:   fieldname,
@@ -616,7 +672,7 @@ func (d data) propertyTypeInfo(dataStruct reflect.Value, fieldname string) (prop
 
 	p.Type = t
 	if p.Type == reflect.TypeOf(false) {
-		p.Options = []string{"false", "true"}
+		//p.Options = []string{"false", "true"}
 	}
 
 	if sf.Tag.Get("hidden") != "" {
