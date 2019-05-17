@@ -76,3 +76,8 @@ func (b *Blank) Draw(dst *image.RGBA, force bool) {
 }
 func (b *Blank) Mouse(pos image.Point, but int, dir int, mod uint32) int { return 0 }
 func (b *Blank) Key(r rune, code uint32, dir int, mod uint32) int        { return 0 }
+
+// Errlog can be overwritten with a with a user widget that presents errors.
+var Errlog = func(err error) {
+	println(err.Error())
+}

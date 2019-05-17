@@ -57,10 +57,10 @@ func (l *List) Draw(dst *image.RGBA, force bool) {
 	if l.Target != nil {
 		*l.Target = l
 	}
-	l.Rect = dst.Rect
-	if force == false && l.Dirty == false {
+	if force == false && l.Dirty == false && l.Rect == dst.Rect {
 		return
 	}
+	l.Rect = dst.Rect
 	l.Dirty = false
 	if len(l.List) > 0 && len(l.Sel) != len(l.List) {
 		l.Sel = make([]bool, len(l.List))
@@ -236,6 +236,9 @@ func (l *List) Key(r rune, code uint32, dir int, mod uint32) int {
 			toggle()
 			return l.DrawSelf()
 		case 40: // enter → execute
+			if l.Single {
+				l.SelectSingle(l.cur)
+			}
 			if l.Execute != nil {
 				return l.Execute()
 			}
@@ -262,6 +265,10 @@ func (l *List) selchanged() {
 	}
 }
 func (l *List) setview() int { // set view after changing cur
+	if len(l.List) <= l.pagesize {
+		l.top = 0
+		return l.DrawSelf()
+	}
 	if l.cur >= len(l.List) {
 		l.cur = len(l.List) - 1
 	}

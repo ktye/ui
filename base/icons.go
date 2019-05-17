@@ -5,11 +5,15 @@ import (
 	"image/draw"
 
 	"golang.org/x/exp/shiny/iconvg"
+	icn "golang.org/x/exp/shiny/materialdesign/icons"
 )
 
 func init() {
 	iconVgs = make(map[string][]byte)
 	icons = make(map[icon]image.Image)
+
+	RegisterIcon("ok", icn.NavigationCheck)
+	RegisterIcon("cancel", icn.NavigationCancel)
 }
 
 // RegisterIcon stores an icon in iconvg format for a given name.

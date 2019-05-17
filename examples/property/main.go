@@ -36,7 +36,9 @@ func buttonBar(kid ui.Widget) *base.ButtonBar {
 
 func setProps(name string, index int) func() int {
 	return func() int {
-		top.Kid.Widget = property.NewList(data, name, index)
+		l := property.NewList(data, name, index)
+		l.ToTable = setTable(name)
+		top.Kid.Widget = l
 		return -1 // redraw everything
 	}
 }

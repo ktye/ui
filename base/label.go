@@ -9,17 +9,23 @@ func NewLabel(s string) *Label {
 	return &Label{Text: s, Align: 6}
 }
 
+// NewLink returns a hyperlink label.
+func NewLink(s string, target func() int) *Label {
+	return &Label{Text: s, Align: 6, Target: target, Colors: &LinkColors}
+}
+
 // Label is a single line non-editable text string,
 // that aligns the text in the destination area:
 // 	6---5---4
 // 	7tex8tex3
 // 	0---1---2
 type Label struct {
-	Text   string
-	Align  int       // 0..8
-	Colors *Colorset // custom color (nil is default Color)
-	Margin int       // border inset pixels
-	rect   image.Rectangle
+	Text       string
+	Align      int       // 0..8
+	Colors     *Colorset // custom color (nil is default Color)
+	Margin     int       // border inset pixels
+	Target     func() int
+	rect, used image.Rectangle
 }
 
 func (l *Label) Draw(dst *image.RGBA, force bool) {
@@ -58,8 +64,16 @@ func (l *Label) Draw(dst *image.RGBA, force bool) {
 			at.Y += (dst.Rect.Dy() - Font.size) / 2
 		}
 
-		String(dst, at, l.Text)
+		x := String(dst, at, l.Text)
+		l.used.Min = dst.Rect.Min.Add(at)
+		l.used.Max = l.used.Min.Add(image.Point{x, Font.size})
 	}
 }
-func (l *Label) Mouse(pos image.Point, but int, dir int, mod uint32) int { return 0 }
-func (l *Label) Key(r rune, code uint32, dir int, mod uint32) int        { return 0 }
+func (l *Label) Mouse(pos image.Point, but int, dir int, mod uint32) int {
+	if l.Target != nil && but == 1 && dir > 0 && pos.In(l.used) {
+		return l.Target()
+	}
+	return 0
+}
+func (l *Label) Key(r rune, code uint32, dir int, mod uint32) int { return 0 }
+func (l *Label) Used() image.Rectangle                            { return l.used }

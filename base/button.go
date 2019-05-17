@@ -101,7 +101,7 @@ type ButtonBar struct {
 	Vertical bool
 	Flip     bool // top or right
 	but      []Kid
-	focus    int
+	focus    int // 0(Kid) 1..n(Buttons)
 }
 
 func NewButtonBar(kid ui.Widget, buttons []*Button) *ButtonBar {
@@ -121,6 +121,7 @@ func (b *ButtonBar) Draw(dst *image.RGBA, force bool) {
 	if b.but == nil {
 		b.but = make([]Kid, len(b.Buttons))
 		for i := range b.but {
+			b.Buttons[i].Dirty = true
 			b.but[i] = Kid{Widget: b.Buttons[i]}
 		}
 	}
@@ -184,7 +185,7 @@ func (b *ButtonBar) Draw(dst *image.RGBA, force bool) {
 				b.Buttons[i].Dirty = true
 				b.Buttons[i].Primary = false
 			}
-			if b.focus == i {
+			if b.focus-1 == i {
 				b.Buttons[i].Dirty = true
 				b.Buttons[i].Primary = true
 			}
@@ -201,11 +202,11 @@ func (b *ButtonBar) Mouse(pos image.Point, but int, dir int, mod uint32) int {
 	if but == 1 && dir > 0 {
 		for i := range b.but {
 			if pos.In(b.but[i].Rectangle) {
-				b.focus = i
+				b.focus = i + 1
 			}
 		}
 		if b.Kid.Widget != nil && pos.In(b.Kid.Rectangle) {
-			b.focus = -1
+			b.focus = 0
 		}
 	}
 	if b.Kid.Widget != nil {
@@ -225,21 +226,21 @@ func (b *ButtonBar) Key(r rune, code uint32, dir int, mod uint32) int {
 		if dir > 0 {
 			for {
 				b.focus++
-				if b.focus >= len(b.Buttons) {
+				if b.focus > len(b.Buttons) {
 					b.focus = 0
 				}
-				if b.Buttons[b.focus].fill == false {
+				if b.focus == 0 || b.Buttons[b.focus-1].fill == false {
 					break
 				}
 			}
 		}
 		return b.DrawSelf()
 	}
-	if n := b.focus; n > 0 && n < len(b.but) {
-		return b.but[n].Key(r, code, dir, mod)
-	}
-	if b.focus < 0 && b.Kid.Widget != nil {
+	if b.focus == 0 && b.Kid.Widget != nil {
 		return b.Kid.Key(r, code, dir, mod)
+	}
+	if n := b.focus; n > 0 && n <= len(b.but) {
+		return b.but[n-1].Key(r, code, dir, mod)
 	}
 	return 0
 }

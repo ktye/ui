@@ -28,6 +28,7 @@ type Table struct {
 	Buttons []*base.Button
 	Edit    func([]int) int
 	err     *base.Label
+	title   *base.Label
 	table
 	name string
 	// TODO
@@ -35,6 +36,7 @@ type Table struct {
 
 func (t *Table) init() {
 	var err error
+	t.title = base.NewLabel(t.name)
 	t.table, err = data{t.Data}.table(t.name)
 	if err != nil {
 		t.err = base.NewLabel(err.Error())
@@ -108,6 +110,12 @@ func (t *Table) Draw(dst *image.RGBA, force bool) {
 	if t.err == nil && t.List == nil {
 		t.init()
 	}
+	if t.title != nil {
+		t.title.Draw(dst, force)
+	}
+	r := dst.Rect
+	r.Min.Y += (3 * base.Font.Size()) / 2
+	dst = dst.SubImage(r).(*image.RGBA)
 	if t.err != nil {
 		t.err.Draw(dst, force)
 		return
@@ -165,6 +173,8 @@ func (t *Table) edit() int {
 	return 0
 }
 func (t *Table) additem() int {
+	t.Data.PreUpdate()
+	defer t.Data.PostUpdate()
 	d := data{t.Data}
 	var idx []int
 	if k := t.singleSelection(); k >= 0 {
@@ -182,6 +192,8 @@ func (t *Table) additem() int {
 	return -1
 }
 func (t *Table) delete() int {
+	t.Data.PreUpdate()
+	defer t.Data.PostUpdate()
 	d := data{t.Data}
 	sel := t.List.Selection()
 	if len(sel) > 0 && sel[0] == 0 {
@@ -221,6 +233,8 @@ func (t *Table) moveitem(up bool) {
 	if (up && k < 1) || (!up && k > len(t.List.List)-1) {
 		return
 	}
+	t.Data.PreUpdate()
+	defer t.Data.PostUpdate()
 	o := k + 1
 	if up {
 		o = k - 1

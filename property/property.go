@@ -235,6 +235,14 @@ func (d data) table(name string) (table, error) {
 	}
 	return t, nil
 }
+func (l list) NameField() string {
+	for _, p := range l.Fields {
+		if p.FieldName == "Name" && len(p.Values) == 1 {
+			return p.Values[0]
+		}
+	}
+	return ""
+}
 
 // Verify all property fields.
 func (l list) Verify() error {
@@ -376,14 +384,14 @@ func (p *property) set(v reflect.Value) error {
 			}
 		case reflect.Int:
 			if v, err := strconv.Atoi(s); err != nil {
-				return err
+				return fmt.Errorf("%s: not an integer", s)
 			} else {
 				element.Set(reflect.ValueOf(v))
 			}
 		case reflect.Float64:
 			s = strings.Replace(s, ",", ".", 1) // allow both , and . as decimal delimiters.
 			if v, err := strconv.ParseFloat(s, 64); err != nil {
-				return err
+				return fmt.Errorf("%s: not a number", s)
 			} else {
 				element.Set(reflect.ValueOf(v))
 			}
