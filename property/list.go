@@ -1,7 +1,6 @@
 package property
 
 import (
-	"fmt"
 	"image"
 	"reflect"
 	"strconv"
@@ -76,12 +75,11 @@ func (l *List) init() {
 			continue
 		}
 		n := i
-		prop := p
 		entries = append(entries, entry{
 			i: n,
-			p: prop,
-			k: prop.DisplayName,
-			v: strings.Join(prop.nablas(), "∘"),
+			p: p,
+			k: p.DisplayName,
+			v: strings.Join(p.Values, "∘"),
 			l: l,
 		})
 	}
@@ -138,7 +136,6 @@ func (l *List) clear() int {
 	return 1
 }
 func (l *List) edit() int {
-	// TODO: toggle bool, show menu for popups, edit strings, …
 	idx := l.selection()
 	if idx < 0 {
 		return 0
@@ -155,12 +152,19 @@ func (l *List) edit() int {
 		l.List = nil
 		return nil
 	}
+	ox := func(s []string) error {
+		p.Values = s
+		err := commit()
+		if err == nil {
+			l.editor = nil
+		}
+		return err
+	}
+	cx := func() int { l.editor = nil; return 1 }
 
 	t := p.Type
 	sl := p.IsSlice
 	switch {
-	case !sl && len(p.Options) > 0: // combobox
-		println("TODO show combobox")
 	case !sl && t == reflect.TypeOf(false): // toggle bool
 		if len(p.Values) == 1 && p.Values[0] == "true" {
 			p.Values[0] = "false"
@@ -171,35 +175,31 @@ func (l *List) edit() int {
 			base.Errlog(err)
 		}
 		return 1
-	case !sl: // line edit
-		l.editor = editor.NewInputWithButtons(p.DisplayName, p.Values[0])
-		in := l.editor.(*base.ButtonBar).Kid.Widget.(*editor.Input)
-		in.Cancel = func() int { l.editor = nil; return 1 }
-		in.Commit = func() error {
-			p.Values[0] = in.Text
-			err := commit()
-			if err == nil {
-				l.editor = nil
-			}
-			return err
-		}
-		return 1
 	default:
-		println(fmt.Errorf("unknown type: %s", p.Type))
-		return 0
+		l.editor = inputEdit(p.DisplayName, p.Values, p.Options, sl, ox, cx)
+		return 1
 	}
 	return 1
 }
 
-func (p property) nablas() []string {
-	if p.Options == nil {
-		return p.Values
+func inputEdit(label string, values []string, opt []string, slice bool, commit func([]string) error, cancel func() int) ui.Widget {
+	var bb *base.ButtonBar
+	newlabel := func(i int) string { return label + " " + strconv.Itoa(i+1) }
+	if slice {
+		labels := make([]string, len(values))
+		for i := range labels {
+			labels[i] = newlabel(i)
+		}
+		bb = editor.NewInputsWithButtons(labels, values)
+	} else {
+		bb = editor.NewInputWithButtons(label, values[0])
 	}
-	s := make([]string, len(p.Values))
-	for i, t := range p.Values {
-		s[i] = t + "∇"
-	}
-	return s
+	ed := bb.Kid.Widget.(*editor.Input)
+	ed.NewLabel = newlabel
+	ed.Options = opt
+	ed.Commit = commit
+	ed.Cancel = cancel
+	return bb
 }
 
 // base.List entry (a subset of the property list entries)

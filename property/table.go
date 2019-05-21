@@ -9,7 +9,6 @@ import (
 	"text/tabwriter"
 
 	"github.com/ktye/ui/base"
-	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
 // NewTable returns a table widget for the for the data source and the given field name.
@@ -31,7 +30,6 @@ type Table struct {
 	title   *base.Label
 	table
 	name string
-	// TODO
 }
 
 func (t *Table) init() {
@@ -88,6 +86,7 @@ func (t *Table) init() {
 		Delete:  t.delete,
 		Execute: t.edit,
 	}
+	t.SelectSingle(1 + t.Data.GetCurrent(t.name))
 	if t.Buttons != nil {
 		t.ButtonBar = base.NewButtonBar(t.List, t.Buttons)
 	}
@@ -167,6 +166,7 @@ func (t *Table) edit() int {
 	if len(sel) == 0 {
 		return 0
 	}
+	t.Data.SetCurrent(t.name, sel[0])
 	if t.Edit != nil {
 		return t.Edit(sel)
 	}
@@ -245,12 +245,4 @@ func (t *Table) moveitem(up bool) {
 	}
 	t.List.List[o], t.List.List[k] = t.List.List[k], t.List.List[o]
 	t.List.SelectSingle(o)
-}
-
-func init() {
-	base.RegisterIcon("edit", icons.ImageEdit)
-	base.RegisterIcon("add", icons.ContentAdd)
-	base.RegisterIcon("del", icons.ActionDelete)
-	base.RegisterIcon("up", icons.HardwareKeyboardArrowUp)
-	base.RegisterIcon("down", icons.HardwareKeyboardArrowDown)
 }

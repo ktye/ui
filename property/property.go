@@ -70,6 +70,8 @@ type Source interface {
 	GetOptions(string) ([]string, error)
 	RenameID(reflect.Value, string) error
 	DeleteID(reflect.Value) error
+	GetCurrent(string) int
+	SetCurrent(string, int)
 	PreUpdate()
 	PostUpdate()
 }

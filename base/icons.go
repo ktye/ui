@@ -14,6 +14,11 @@ func init() {
 
 	RegisterIcon("ok", icn.NavigationCheck)
 	RegisterIcon("cancel", icn.NavigationCancel)
+	RegisterIcon("edit", icn.ImageEdit)
+	RegisterIcon("add", icn.ContentAdd)
+	RegisterIcon("del", icn.ActionDelete)
+	RegisterIcon("up", icn.HardwareKeyboardArrowUp)
+	RegisterIcon("down", icn.HardwareKeyboardArrowDown)
 }
 
 // RegisterIcon stores an icon in iconvg format for a given name.
