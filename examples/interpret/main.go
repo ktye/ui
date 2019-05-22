@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/eaburns/T/rope"
-	"github.com/ktye/plot"
 	"github.com/ktye/ui"
 	"github.com/ktye/ui/base"
 	"github.com/ktye/ui/dpy"
@@ -19,12 +18,8 @@ import (
 	"golang.org/x/exp/shiny/screen"
 )
 
-var win *ui.Window
 var rpl *editor.Repl
-var edt *editor.Edit
-var cnv ui.Widget
-var sp1, sp2 *base.Split
-var kt map[v]v
+var tiler *base.Tiler
 var ik k
 var iv apl
 
@@ -36,51 +31,18 @@ func main() {
 	rpl.Nowrap = true
 	rpl.Menu = rplmenu(rpl)
 
-	edt = editor.New("")
-	edt.Nowrap = true
-	edt.Menu = edt.StandardMenu()
-	evlbutton(edt)
-	dotbutton(edt)
-	cnv = &base.Blank{}
-	sp2 = base.NewSplit(edt, cnv)
-	sp1 = base.NewSplit(rpl, sp2)
-	sp1.Vertical = true
-	sp1.Ratio = 1
-
 	ik = kinit()
 	iv = ivinit()
 	rpl.Interp = ik
 
-	win = ui.New(dpy.New(&screen.NewWindowOptions{Title: "i"})) // win7 confuses iota and quad.
-
-	win.Top = &base.Scale{Widget: sp1, Funcs: []func(){plotfont}}
+	tiler = base.NewTiler(rpl, newwin)
+	win := ui.New(dpy.New(&screen.NewWindowOptions{Title: "i"})) // win7 confuses iota and quad.
+	win.Top = &base.Scale{Widget: tiler, Funcs: []func(){plotfont}}
 	done := win.Run()
 	<-done
 }
 
 type interp struct{}
-
-func isplot(x v) (plot.Plots, bool) {
-	if p, o := x.(plot.Plots); o {
-		return p, true
-	} else if p, o := x.(plot.Plot); o {
-		return plot.Plots{p}, true
-	} else if p, o := x.([]plot.Plot); o {
-		return plot.Plots(p), true
-	} else if u, o := x.(l); o {
-		for i := range u {
-			if _, o := u[i].(plot.Plot); !o {
-				return nil, false
-			}
-		}
-		p = make(plot.Plots, len(u))
-		for i := range u {
-			p[i] = u[i].(plot.Plot)
-		}
-		return p, true
-	}
-	return nil, false
-}
 
 func rplmenu(r *editor.Repl) *base.Menu {
 	kval := func() v {
@@ -88,11 +50,7 @@ func rplmenu(r *editor.Repl) *base.Menu {
 		if s == "" {
 			return nil
 		}
-		x := run(s, kt)
-		if _, o := isplot(x); o {
-			return nil
-		}
-		return x
+		return run(s)
 	}
 	edit := base.NewButton("edit", "", func() int {
 		var t string
@@ -102,7 +60,7 @@ func rplmenu(r *editor.Repl) *base.Menu {
 		} else {
 			t = fmt(x).(s)
 		}
-		edit(t)
+		edit(t, 0)
 		return -1
 	})
 	show := base.NewButton("show", "", func() int {
@@ -113,10 +71,10 @@ func rplmenu(r *editor.Repl) *base.Menu {
 	apljk := base.NewButton("k→APL", "", func() int {
 		if b.Text == "k→APL" {
 			b.Text = "APL→k"
-			rpl.Interp = ik
+			rpl.Interp = iv
 		} else {
 			b.Text = "k→APL"
-			rpl.Interp = iv
+			rpl.Interp = ik
 		}
 		return -1
 	})
@@ -125,24 +83,6 @@ func rplmenu(r *editor.Repl) *base.Menu {
 	m := r.StandardMenu()
 	m.Buttons = append(m.Buttons, edit, show, apljk)
 	return m
-}
-func evlbutton(e *editor.Edit) { // add a run menu entry to the editor
-	b := base.NewButton("eval", "", func() int {
-		rpl.Execute(nil, e.Selection())
-		return -1
-	})
-	e.Menu.Buttons = append([]*base.Button{b}, e.Menu.Buttons...)
-}
-func dotbutton(e *editor.Edit) { // assign editor content or selection to buf variable
-	b := base.NewButton("dot:←", "", func() int {
-		s := e.Selection()
-		if len(s) == 0 {
-			s = e.Text().String()
-		}
-		kt["dot"] = s
-		return 0
-	})
-	e.Menu.Buttons = append(e.Menu.Buttons, b)
 }
 
 // plumb intercepts execute.
@@ -171,10 +111,7 @@ func plumb(s string) string {
 		}
 		b, err := ioutil.ReadFile(file)
 		if err == nil {
-			edit(string(b))
-			if line > 0 {
-				edt.MarkAddr(strconv.Itoa(line))
-			}
+			edit(string(b), line)
 			return ""
 		}
 	}
@@ -189,35 +126,6 @@ func plumb(s string) string {
 		return s
 	}
 	return ""
-}
-func edit(t s) {
-	edt.SetText(rope.New(t))
-	if sp1.Ratio > 0.95 {
-		sp1.Ratio = 0
-	}
-}
-func setplot(p plot.Plots) {
-	cnv = plot.NewUI(p)
-	if sp1.Ratio > 0.95 {
-		sp1.Ratio = 0
-	}
-	if sp2.Ratio > 0.95 {
-		sp2.Ratio = 0
-	}
-	sp2.Kids[1].Widget = cnv
-}
-func plotfont() {
-	s1 := base.Font.Size()
-	s2 := (s1 * 8) / 10
-	if s1 < 6 {
-		s1 = 6
-	}
-	if s2 < 6 {
-		s2 = 6
-	}
-	f1 := base.LoadFace(base.Font.TTF, s1)
-	f2 := base.LoadFace(base.Font.TTF, s2)
-	plot.SetFonts(f1, f2)
 }
 
 /*

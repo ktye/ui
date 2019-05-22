@@ -153,7 +153,7 @@ func (b *ButtonBar) Draw(dst *image.RGBA, force bool) {
 		if fills > 0 {
 			space /= fills
 		}
-		p := image.Point{dst.Rect.Min.X, isver*dst.Rect.Min.Y + (1-isflip)*ishor*(dst.Rect.Max.Y-H)}
+		p := image.Point{dst.Rect.Min.X, dst.Rect.Min.Y + (1-isflip)*ishor*(dst.Rect.Dy()-H)}
 		p.X += isver * isflip * (dst.Rect.Dx() - hsize)
 		for i := range b.but {
 			if b.Buttons[i].fill {

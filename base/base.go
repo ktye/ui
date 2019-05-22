@@ -65,6 +65,24 @@ func clear(dst *image.RGBA) {
 	draw.Draw(dst, dst.Bounds(), Colors[1], image.ZP, draw.Src)
 }
 
+type Container struct {
+	Target **Container
+	ui.Widget
+}
+
+func (c *Container) Draw(dst *image.RGBA, force bool) {
+	if c.Target != nil {
+		*c.Target = c
+	}
+	c.Widget.Draw(dst, force)
+}
+func (c *Container) Mouse(pos image.Point, but int, dir int, mod uint32) int {
+	return c.Widget.Mouse(pos, but, dir, mod)
+}
+func (c *Container) Key(r rune, code uint32, dir int, mod uint32) int {
+	return c.Widget.Key(r, code, dir, mod)
+}
+
 type Blank struct {
 	Base
 }

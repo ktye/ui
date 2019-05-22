@@ -26,41 +26,55 @@ type k map[v]v
 
 func (a k) Eval(s string) string {
 	s = plumb(s)
-	x := run(s, map[v]v(a))
+	x := run(s)
 	if x != nil {
 		s, o := x.(string)
 		if !o {
-			if p, o := isplot(x); o {
-				setplot(p)
-				return ""
-			} else {
-				s = fmt(x).(string)
-			}
+			/*
+				if p, o := isplot(x); o {
+					setplot(p)
+					return ""
+				} else {
+			*/
+			s = fmt(x).(string)
+			//}
 		}
 		return s
 	}
 	return ""
 }
 
-func run(t string, a map[v]v) (r interface{}) {
+func run(t string) (r v) {
 	defer func() {
 		if c := recover(); c != nil {
-			rs := ""
-			for _, s := range strings.Split(string(debug.Stack()), "\n") {
-				if strings.HasPrefix(s, "\t") {
-					rs += "\n" + s[1:]
-				}
-			}
-			if s, o := c.(string); o {
-				rs += "\n" + s
-			} else if e, o := c.(error); o {
-				rs += "\n" + e.Error()
-			}
-			r = rs
+			r = stack(c)
 		}
 	}()
 	pr := i.P(t)
-	return i.E(pr, a)
+	return i.E(pr, ik)
+}
+func keval(l l) (r v) {
+	defer func() {
+		if c := recover(); c != nil {
+			r = stack(c)
+		}
+	}()
+	return i.E(l, ik)
+}
+
+func stack(c interface{}) string {
+	rs := ""
+	for _, s := range strings.Split(string(debug.Stack()), "\n") {
+		if strings.HasPrefix(s, "\t") {
+			rs += "\n" + s[1:]
+		}
+	}
+	if s, o := c.(string); o {
+		rs += "\n" + s
+	} else if e, o := c.(error); o {
+		rs += "\n" + e.Error()
+	}
+	return rs
 }
 
 func kinit() k {
@@ -75,5 +89,6 @@ func kinit() k {
 	til = a["!:"].(func(v) v)
 	cst = a["$$"].(func(v, v) v)
 	regplot(a)
+	a["devvars"] = make(map[string]func(v, v) v)
 	return k(a)
 }
