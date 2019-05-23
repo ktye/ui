@@ -1,47 +1,160 @@
 package main
 
 import (
+	"image"
+
 	"github.com/ktye/plot"
 	"github.com/ktye/ui/base"
 )
 
-func newpl(cb *base.Button) devvar {
-	return nil
+// pl(ot) device variable
+//
+// set
+//	pl:""                      /reset
+//	pl:[plot.Plot]             /set plots
+//	pl:[plot.Plots]            /set plots
+//	pl:(plot.Plot;plot.Plot…)  /set plots
+//	pl:real array              /new xy plot
+//	pl:complex array           /new polar plot
+//	pl:list of array           /new xy or polar plot with multiple lines
+// get
+//	pl → plot.Plots or plot.Plot (if len 1).
+type pl struct {
+	base.Base
+	plot.Plots
+	*plot.UI
 }
 
-/*
-func isplot(x v) (plot.Plots, bool) {
-	if p, o := x.(plot.Plots); o {
-		return p, true
-	} else if p, o := x.(plot.Plot); o {
-		return plot.Plots{p}, true
-	} else if p, o := x.([]plot.Plot); o {
-		return plot.Plots(p), true
-	} else if u, o := x.(l); o {
-		for i := range u {
-			if _, o := u[i].(plot.Plot); !o {
-				return nil, false
+func (p *pl) call(x, idx v) v {
+	if x == nil {
+		if len(p.Plots) == 1 {
+			return p.Plots[0]
+		}
+		return p.Plots
+	}
+	switch t := x.(type) {
+	case string:
+		if t == "" { // reset
+			p.Plots = plot.Plots{plot.Plot{}}
+		} else {
+			return nil
+		}
+	case []complex128:
+		p.Plots = plot.Plots{plotData(t)}
+	case plot.Plot:
+		p.Plots = plot.Plots{t}
+	case plot.Plots:
+		p.Plots = t
+	case l:
+		plots := plotList(t) // list of plot.Plot
+		if plots == nil {
+			plots = dataList(t) // list of []complex128
+		}
+		if plots == nil {
+			return nil
+		}
+		p.Plots = plots
+	default:
+		return nil
+	}
+	p.UI.SetPlots(p.Plots)
+	return nil
+}
+func newpl(cb *base.Button) devvar {
+	plots := plot.Plots{plot.Plot{}}
+	p := pl{
+		Plots: plots,
+		UI:    plot.NewUI(plots),
+	}
+	p.Menu = base.NewMenu([]*base.Button{cb})
+	return &p
+}
+
+func (p *pl) Draw(dst *image.RGBA, force bool) {
+	p.UI.Draw(dst, force)
+	p.DrawMenu(dst)
+}
+func (p *pl) Mouse(pos image.Point, but int, dir int, mod uint32) int {
+	if r, o := p.MenuMouse(pos, but, dir, mod); o {
+		return r
+	}
+	return p.UI.Mouse(pos, but, dir, mod)
+}
+func (p *pl) Key(r rune, code uint32, dir int, mod uint32) int {
+	if r, o := p.MenuKey(r, code, dir, mod); o {
+		return r
+	}
+	return p.UI.Key(r, code, dir, mod)
+}
+
+func plotData(z []complex128) plot.Plot {
+	xvec := func(n int) []float64 {
+		r := make([]float64, n)
+		for i := range r {
+			r[i] = float64(i)
+		}
+		return r
+	}
+	isreal := true
+	for _, u := range z {
+		if imag(u) != 0 {
+			isreal = false
+			break
+		}
+	}
+	p := plot.Plot{Type: plot.Polar}
+	x := xvec(len(z))
+	var y []float64
+	if isreal {
+		p.Type = plot.XY
+		y = realvec(z)
+		z = nil
+	}
+	p.Lines = []plot.Line{plot.Line{X: x, Y: y, C: z}}
+	return p
+}
+func dataList(t []interface{}) plot.Plots {
+	var r plot.Plot
+	for i := range t {
+		if z, o := t[i].([]complex128); o {
+			p := plotData(z)
+			if i == 0 {
+				r = p
+			} else if p.Type == r.Type {
+				r.Lines = append(r.Lines, p.Lines[0])
+			} else {
+				x := p.Lines[0].X
+				if p.Type == plot.XY {
+					r.Lines = append(r.Lines, plot.Line{X: x, Y: realvec(z)})
+				} else {
+					r.Lines = append(r.Lines, plot.Line{X: x, C: z})
+				}
 			}
+			r.Lines[i].Id = i
+		} else {
+			return nil
 		}
-		p = make(plot.Plots, len(u))
-		for i := range u {
-			p[i] = u[i].(plot.Plot)
+	}
+	return plot.Plots{r}
+}
+func plotList(t []interface{}) plot.Plots {
+	plots := make(plot.Plots, len(t))
+	for i := range t {
+		if pt, o := t[i].(plot.Plot); o {
+			plots[i] = pt
+		} else {
+			return nil
 		}
-		return p, true
 	}
-	return nil, false
+	return plots
 }
-func setplot(p plot.Plots) {
-	cnv = plot.NewUI(p)
-	if sp1.Ratio > 0.95 {
-		sp1.Ratio = 0
+func realvec(z []complex128) []float64 {
+	r := make([]float64, len(z))
+	for i := range z {
+		r[i] = real(z[i])
 	}
-	if sp2.Ratio > 0.95 {
-		sp2.Ratio = 0
-	}
-	sp2.Kids[1].Widget = cnv
+	return r
 }
-*/
 
 func plotfont() {
 	s1 := base.Font.Size()
@@ -55,29 +168,4 @@ func plotfont() {
 	f1 := base.LoadFace(base.Font.TTF, s1)
 	f2 := base.LoadFace(base.Font.TTF, s2)
 	plot.SetFonts(f1, f2)
-}
-
-func regplot(a map[v]v) {
-	p := plot.Plot{}
-	plotfont()
-	a["plot"] = p
-	a["line"] = plot.Line{}
-	a["plots"] = plots
-}
-
-// plots converts a list of plots to plot.Plots which results in multiple plots next to each other as a single image.
-func plots(x v) v {
-	l, o := x.(l)
-	if !o {
-		panic("type")
-	}
-	plts := make(plot.Plots, len(l))
-	for i := range l {
-		p, o := l[i].(plot.Plot)
-		if !o {
-			panic("type")
-		}
-		plts[i] = p
-	}
-	return plts
 }

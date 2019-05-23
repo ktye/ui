@@ -10,12 +10,13 @@ import (
 	"github.com/ktye/ui/editor"
 )
 
-// ed device variable
+// ed(itor) device variable
 //
 // set
 //	ed:"text"               /set text
 //	ed:("line1";"line2"…)   /set lines
 //	ed:5                    /mark line 5
+//	ed:4 6                  /mark byte range
 // get
 //	ed → dict:
 //	text|content
@@ -40,6 +41,10 @@ func (e ed) call(x, idx v) v {
 		e.Edit.MarkAddr(strconv.Itoa(t))
 	case complex128:
 		e.Edit.MarkAddr(strconv.Itoa(int(real(t))))
+	case []complex128:
+		if len(t) == 2 {
+			e.Edit.TextBox.SetDot([2]int64{int64(real(t[0])), int64(real(t[1]))})
+		}
 	default:
 		println(reflect.TypeOf(x).String())
 	}
@@ -72,7 +77,12 @@ func edit(t s, line int) {
 	tiler.Widget = s
 	keval(l{":", ed, l{"`", t}}) // ed:s…
 	if line > 0 {
-		keval(l{":", ed, line}) // TODO?
+		go func() { // call ed:line after the textbox is created during draw.
+			win.Call <- func() int {
+				keval(l{":", ed, line}) // TODO?
+				return -1
+			}
+		}()
 	}
 }
 

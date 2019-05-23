@@ -57,6 +57,7 @@ func keval(l l) (r v) {
 	defer func() {
 		if c := recover(); c != nil {
 			r = stack(c)
+			println(r.(string))
 		}
 	}()
 	return i.E(l, ik)
@@ -88,7 +89,6 @@ func kinit() k {
 	lnx = a["ln"].(func(v) int)
 	til = a["!:"].(func(v) v)
 	cst = a["$$"].(func(v, v) v)
-	regplot(a)
 	a["devvars"] = make(map[string]func(v, v) v)
 	return k(a)
 }

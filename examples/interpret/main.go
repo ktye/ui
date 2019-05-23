@@ -18,6 +18,7 @@ import (
 	"golang.org/x/exp/shiny/screen"
 )
 
+var win *ui.Window
 var rpl *editor.Repl
 var tiler *base.Tiler
 var ik k
@@ -25,6 +26,7 @@ var iv apl
 
 func main() {
 	base.SetFont(apl385.TTF(), 20)
+	plotfont()
 	rpl = &editor.Repl{Reply: true, Prompt: " "}
 	rpl.Edit.SetText(rope.New(" "))
 	rpl.Execute = func(_ *editor.Edit, s string) int { rpl.DefaultExec(nil, s); return -1 }
@@ -36,7 +38,7 @@ func main() {
 	rpl.Interp = ik
 
 	tiler = base.NewTiler(rpl, newwin)
-	win := ui.New(dpy.New(&screen.NewWindowOptions{Title: "i"})) // win7 confuses iota and quad.
+	win = ui.New(dpy.New(&screen.NewWindowOptions{Title: "i"})) // win7 confuses iota and quad.
 	win.Top = &base.Scale{Widget: tiler, Funcs: []func(){plotfont}}
 	done := win.Run()
 	<-done
