@@ -207,11 +207,21 @@ func (t *Table) delete() int {
 	}
 	sort.Sort(sort.Reverse(sort.IntSlice(sel)))
 
+	ln := len(t.List.List) - 1
+	current := t.Data.GetCurrent(t.name)
 	for _, i := range sel {
 		if err := d.deleteSliceElement(t.name, i); err != nil {
 			t.err = base.NewLabel(err.Error())
 		}
+		ln--
+		if current >= ln {
+			current = ln - 1
+		}
 	}
+	if current < 0 {
+		current = 0
+	}
+	t.Data.SetCurrent(t.name, current)
 	t.List = nil // rebuild on next draw
 	return -1
 }

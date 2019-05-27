@@ -132,8 +132,14 @@ func (l *List) clear() int {
 	if err := d.update(l.list); err != nil {
 		base.Errlog(err)
 	}
+	l.trigger()
 	l.List.List = nil
 	return 1
+}
+func (l *List) trigger() {
+	if l.Trigger != nil {
+		l.Trigger()
+	}
 }
 func (l *List) edit() int {
 	idx := l.selection()
@@ -149,6 +155,7 @@ func (l *List) edit() int {
 		if err := d.update(l.list); err != nil {
 			return err
 		}
+		l.trigger()
 		l.List = nil
 		return nil
 	}
