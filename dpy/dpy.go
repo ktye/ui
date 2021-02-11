@@ -71,6 +71,8 @@ func New(opt *screen.NewWindowOptions) *Display {
 		opt:   *opt,
 	}
 	go driver.Main(func(s screen.Screen) {
+		// todo: this is called twice and creates two windows, no idea why.
+		// early returning does not work.
 		d.screen = s
 		w, err := s.NewWindow(opt)
 		if err != nil {
